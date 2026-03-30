@@ -1,10 +1,17 @@
 import { useState } from "react";
 
 const SAMPLE_REPORTS = [
-  "A 7.2 magnitude earthquake has struck central Turkey near the city of Gaziantep. Multiple buildings have collapsed and there are reports of people trapped under rubble. Power outages reported across the region.",
-  "Massive flooding in Bangladesh after monsoon rains. The Brahmaputra river has breached its banks, displacing thousands. Roads are submerged and rescue teams cannot reach remote villages.",
-  "A large wildfire is spreading rapidly through northern California forests near residential areas. Over 5,000 acres burned so far. Winds are expected to intensify. Evacuations underway.",
-  "A chemical plant explosion in industrial district of Mumbai, India. Toxic fumes spreading across nearby neighborhoods. Multiple casualties reported. Emergency services are overwhelmed.",
+  "M7.2 earthquake near Gaziantep, Turkey. Multiple mid-rise buildings pancaked, people trapped, power and telecom down across central districts.",
+  "Monsoon flooding in Sylhet, Bangladesh. Brahmaputra has overtopped embankments; remote villages unreachable, thousands displaced, urgent need for boats and dry food.",
+  "Wildfire in Redding, California growing towards residential edge. 7,000 acres burned, red-flag winds forecast this evening, spot fires jumping Highway 44, evacuations in progress.",
+  "Chemical plant explosion in Navi Mumbai industrial zone. Toxic plume moving south with wind, reports of respiratory distress, local EMS overwhelmed, shelter-in-place advised.",
+  "Category 4 cyclone making landfall near Beira, Mozambique. Storm surge expected, low-lying neighborhoods already flooding, hospital generators at risk.",
+  "Flash floods in Dubai after record cloudburst. Major arteries submerged, cars stranded, airport diversions ongoing, metro partially suspended.",
+  "Tornado outbreak near Tulsa, Oklahoma. Multiple touchdowns, debris on highways, power lines down, injuries reported, sirens active.",
+  "Epidemic cluster in Lagos informal settlements. Rapid spike in cholera-like symptoms, local clinics short on IV fluids and ORS.",
+  "Dam breach risk on the Paraná River near Corrientes, Argentina. Upstream levels rising fast, downstream towns alerted, livestock evacuation underway.",
+  "Landslide in Shimla, India after heavy rain. Hill road cut off, tourist buses stranded, risk of secondary slides, search teams requested.",
+  "Heatwave in Seville, Spain. Grid stress warnings issued, elderly care homes reporting heat illnesses, cooling centers requested.",
 ];
 
 function ReportForm({ onSubmit, processing }) {

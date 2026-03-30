@@ -14,6 +14,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const socket = io(API_URL);
 
 function App() {
+  const [showLanding, setShowLanding] = useState(true);
   const [agentUpdates, setAgentUpdates] = useState([]);
   const [incidents, setIncidents] = useState([]);
   const [currentIncident, setCurrentIncident] = useState(null);
@@ -35,6 +36,11 @@ function App() {
       setReasoningChain(data.chain);
     });
 
+    socket.on("incidentDeleted", ({ id }) => {
+      setIncidents((prev) => prev.filter((inc) => inc._id !== id));
+      setCurrentIncident((prev) => (prev?._id === id ? null : prev));
+    });
+
     fetch(`${API_URL}/api/crisis/incidents`)
       .then((res) => res.json())
       .then((data) => {
@@ -46,6 +52,7 @@ function App() {
       socket.off("agentUpdate");
       socket.off("newIncident");
       socket.off("reasoningUpdate");
+      socket.off("incidentDeleted");
     };
   }, []);
 
@@ -75,17 +82,83 @@ function App() {
     }
   };
 
+  const handleDeleteIncident = async (id) => {
+    try {
+      await fetch(`${API_URL}/api/crisis/incidents/${id}`, { method: "DELETE" });
+      setIncidents((prev) => prev.filter((inc) => inc._id !== id));
+      setCurrentIncident((prev) => (prev?._id === id ? null : prev));
+    } catch (err) {
+      console.error("Failed to delete incident", err);
+    }
+  };
+
+  const handleHeroCta = () => {
+    setShowLanding(false);
+    setActiveTab("report");
+    requestAnimationFrame(() => {
+      const el = document.getElementById("main-content");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  };
+
+  const handleBackToLanding = () => {
+    setShowLanding(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  if (showLanding) {
+    return (
+      <div className="landing">
+        <div className="landing-bg"></div>
+        <div className="landing-ink"></div>
+        <div className="landing-particles"></div>
+        <header className="landing-header">
+          <div className="logo">
+            <span className="logo-icon">🛡️</span>
+            <h1>SANGYAN AI</h1>
+          </div>
+        </header>
+        <main className="landing-content">
+          <p className="eyebrow">Welcome to our</p>
+          <h1 className="landing-title">
+            <span>SANGYAN</span>
+            <span>AI</span>
+            <span>Response</span>
+            <span>Studio</span>
+          </h1>
+          <p className="landing-sub">
+            Live, factual, multi-agent disaster intelligence with breathtaking clarity. Monitor, analyze, and respond before the world even blinks.
+          </p>
+          <div className="landing-actions">
+            <button className="btn-primary hero-btn" onClick={handleHeroCta}>
+              Let&apos;s revolutionize
+            </button>
+            <button className="ghost-btn" onClick={handleHeroCta}>Take a tour</button>
+          </div>
+        </main>
+        <div className="landing-social">
+          <span>⬤</span>
+          <span>◎</span>
+          <span>◉</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <header className="app-header">
         <div className="header-left">
           <div className="logo">
             <span className="logo-icon">🛡️</span>
-            <h1>CrisisAI</h1>
+            <h1>SANGYAN AI</h1>
           </div>
           <span className="tagline">Multi-Agent Autonomous Crisis Response System</span>
         </div>
         <div className="header-right">
+          <button className="ghost-btn small" onClick={handleBackToLanding}>◀ Back</button>
           <div className={`status-badge ${processing ? "active" : "idle"}`}>
             <span className="status-dot"></span>
             {processing ? "Agents Working" : "System Ready"}
@@ -105,22 +178,26 @@ function App() {
         </button>
       </div>
 
-      <main className="app-main">
+      <main className="app-main" id="main-content">
         <div className="left-panel">
-          {activeTab === "report" && <ReportForm onSubmit={handleSubmitReport} processing={processing} />}
+          {activeTab === "report" && (
+            <>
+              <ReportForm onSubmit={handleSubmitReport} processing={processing} />
+              <AgentActivity updates={agentUpdates} />
+            </>
+          )}
           {activeTab === "live" && <LiveDataFeed />}
           {activeTab === "auto" && <AutoMonitor socket={socket} />}
-          <AgentActivity updates={agentUpdates} />
         </div>
 
         <div className="right-panel">
           <CrisisMap incidents={incidents} currentIncident={currentIncident} />
-          <ReasoningChain chain={reasoningChain} />
-          <Dashboard currentIncident={currentIncident} />
+          {activeTab === "report" && <ReasoningChain chain={reasoningChain} />}
+          {activeTab === "report" && <Dashboard currentIncident={currentIncident} />}
         </div>
       </main>
 
-      <IncidentList incidents={incidents} onSelect={setCurrentIncident} />
+      <IncidentList incidents={incidents} onSelect={setCurrentIncident} onDelete={handleDeleteIncident} />
     </div>
   );
 }

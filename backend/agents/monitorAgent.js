@@ -21,9 +21,29 @@ Always provide realistic coordinates for the location mentioned.`;
 
 async function monitorAgent(input) {
   const result = await callAgent(MONITOR_PROMPT, input);
+  const allowedTypes = ["earthquake", "flood", "fire", "storm", "epidemic", "industrial", "other"];
+  const type = allowedTypes.includes(result.type) ? result.type : "other";
+  const confidence = Math.max(0, Math.min(1, Number(result.confidence) || 0));
+  const isCrisis = Boolean(result.isCrisis);
+
+  const loc = result.location || {};
+  const lat = Number(loc.lat);
+  const lng = Number(loc.lng);
+  const cleanedLocation = loc.name
+    ? {
+        name: loc.name,
+        ...(Number.isFinite(lat) ? { lat } : {}),
+        ...(Number.isFinite(lng) ? { lng } : {}),
+      }
+    : undefined;
+
   return {
     agent: "Monitor Agent",
     ...result,
+    type,
+    confidence,
+    isCrisis,
+    location: cleanedLocation,
   };
 }
 

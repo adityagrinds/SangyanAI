@@ -1,4 +1,4 @@
-function IncidentList({ incidents, onSelect }) {
+function IncidentList({ incidents, onSelect, onDelete }) {
   if (incidents.length === 0) return null;
 
   return (
@@ -12,18 +12,26 @@ function IncidentList({ incidents, onSelect }) {
           <div
             key={incident._id || i}
             className="incident-item"
-            onClick={() => onSelect(incident)}
           >
-            <div className="incident-type-icon">
+            <div className="incident-type-icon" onClick={() => onSelect(incident)}>
               {getTypeIcon(incident.type)}
             </div>
-            <div className="incident-info">
+            <div className="incident-info" onClick={() => onSelect(incident)}>
               <strong>{incident.title}</strong>
               <span className="incident-meta">
                 {incident.location?.name} • {incident.type} • {incident.severity}
               </span>
             </div>
-            <div className={`severity-dot ${incident.severity}`}></div>
+            <div className={`severity-dot ${incident.severity}`} onClick={() => onSelect(incident)}></div>
+            {onDelete && (
+              <button
+                className="delete-pill"
+                onClick={() => onDelete(incident._id)}
+                aria-label="Delete incident"
+              >
+                Delete
+              </button>
+            )}
           </div>
         ))}
       </div>
