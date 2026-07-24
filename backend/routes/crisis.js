@@ -7,6 +7,7 @@ const { responderAgent } = require("../agents/responderAgent");
 const { getRelevantMemory, buildMemoryContext } = require("../services/memory");
 const { getGlobalCrisisData, getRecentEarthquakes } = require("../services/liveData");
 const { startAutoMonitor, stopAutoMonitor, getAutoMonitorStatus } = require("../services/autoMonitor");
+const { resolveIncidentLocation } = require("../services/locationResolver");
 
 // Process a new crisis report through all 3 agents with memory + reasoning chain
 router.post("/process", async (req, res) => {
@@ -25,6 +26,23 @@ router.post("/process", async (req, res) => {
     reasoningChain.push({ agent: "Monitor Agent", action: "Received raw report input", timestamp: new Date() });
 
     const monitorResult = await monitorAgent(report);
+
+    const resolvedLocation = await resolveIncidentLocation({
+      report,
+      title: monitorResult.title,
+      description: monitorResult.description,
+      location: monitorResult.location,
+    });
+
+    if (resolvedLocation && (resolvedLocation.lat !== monitorResult.location?.lat || resolvedLocation.lng !== monitorResult.location?.lng || resolvedLocation.name !== monitorResult.location?.name)) {
+      monitorResult.location = resolvedLocation;
+      reasoningChain.push({
+        agent: "Location Resolver",
+        action: `Resolved map location to ${resolvedLocation.name} (${resolvedLocation.lat}, ${resolvedLocation.lng})`,
+        timestamp: new Date(),
+      });
+      io.emit("reasoningUpdate", { chain: reasoningChain });
+    }
 
     reasoningChain.push({ agent: "Monitor Agent", action: `Detected: ${monitorResult.title || "No crisis"}. Type: ${monitorResult.type}. Confidence: ${monitorResult.confidence}`, timestamp: new Date() });
     io.emit("agentUpdate", { agent: "Monitor Agent", status: "done", message: `Detection complete: ${monitorResult.title || "No crisis detected"}`, data: monitorResult });

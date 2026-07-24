@@ -144,10 +144,10 @@ function CrisisMap({ incidents, currentIncident }) {
       <MapContainer
         center={[20, 0]}
         zoom={2}
+        attributionControl={false}
         style={{ height: "400px", width: "100%", borderRadius: "0 0 12px 12px" }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {currentMarkerLocation && <CurrentLocationFollower location={currentMarkerLocation} />}
