@@ -1,5 +1,5 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -17,6 +17,53 @@ const severityColors = {
   high: "#f97316",
   critical: "#ef4444",
 };
+
+const geocodeCache = new Map();
+
+function hasValidCoordinates(location) {
+  return Number.isFinite(Number(location?.lat)) && Number.isFinite(Number(location?.lng)) && !(Number(location?.lat) === 0 && Number(location?.lng) === 0);
+}
+
+async function geocodeLocation(name) {
+  const trimmedName = name?.trim();
+  if (!trimmedName) return null;
+
+  if (geocodeCache.has(trimmedName)) {
+    return geocodeCache.get(trimmedName);
+  }
+
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(trimmedName)}`,
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const results = await response.json();
+    if (!Array.isArray(results) || results.length === 0) {
+      geocodeCache.set(trimmedName, null);
+      return null;
+    }
+
+    const resolved = {
+      name: trimmedName,
+      lat: Number(results[0].lat),
+      lng: Number(results[0].lon),
+    };
+
+    geocodeCache.set(trimmedName, resolved);
+    return resolved;
+  } catch {
+    return null;
+  }
+}
 
 function createIcon(severity) {
   const color = severityColors[severity] || "#6b7280";
@@ -38,15 +85,55 @@ function createIcon(severity) {
 function FlyToLocation({ location }) {
   const map = useMap();
   useEffect(() => {
-    if (location?.lat && location?.lng) {
+    if (hasValidCoordinates(location)) {
       map.flyTo([location.lat, location.lng], 8, { duration: 1.5 });
     }
   }, [location, map]);
   return null;
 }
 
+function CurrentLocationFollower({ location }) {
+  const map = useMap();
+  const [resolvedLocation, setResolvedLocation] = useState(location);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function resolveLocation() {
+      if (hasValidCoordinates(location)) {
+        setResolvedLocation(location);
+        return;
+      }
+
+      const geocoded = await geocodeLocation(location?.name);
+      if (isMounted && geocoded) {
+        setResolvedLocation(geocoded);
+      }
+    }
+
+    resolveLocation();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [location]);
+
+  useEffect(() => {
+    if (hasValidCoordinates(resolvedLocation)) {
+      map.flyTo([resolvedLocation.lat, resolvedLocation.lng], 8, { duration: 1.5 });
+    }
+  }, [resolvedLocation, map]);
+
+  return null;
+}
+
 function CrisisMap({ incidents, currentIncident }) {
   const currentLocation = currentIncident?.location;
+  const currentMarkerLocation = hasValidCoordinates(currentLocation)
+    ? currentLocation
+    : currentLocation?.name
+      ? currentLocation
+      : null;
 
   return (
     <div className="card map-container">
@@ -63,10 +150,10 @@ function CrisisMap({ incidents, currentIncident }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {currentLocation && <FlyToLocation location={currentLocation} />}
+        {currentMarkerLocation && <CurrentLocationFollower location={currentMarkerLocation} />}
         {incidents.map(
           (incident, i) =>
-            incident.location?.lat && (
+            hasValidCoordinates(incident.location) && (
               <Marker
                 key={incident._id || i}
                 position={[incident.location.lat, incident.location.lng]}
