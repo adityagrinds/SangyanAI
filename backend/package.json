@@ -1,5 +1,5 @@
 {
-  "name": "crisis-response-backend",
+  "name": "sangyan-ai-backend",
   "version": "1.0.0",
   "description": "AI Crisis Response Dashboard - Backend",
   "main": "server.js",
