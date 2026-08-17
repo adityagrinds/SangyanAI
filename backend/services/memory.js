@@ -1,7 +1,10 @@
+const mongoose = require("mongoose");
 const Incident = require("../models/Incident");
 
 // Get past incidents similar to the current crisis for agent context
 async function getRelevantMemory(type, location) {
+  if (mongoose.connection.readyState !== 1) return null;
+
   const query = {};
   if (type) query.type = type;
 

@@ -8,7 +8,7 @@ _Monitor, analyze, and respond — before the world even blinks._
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com)
-[![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3_70B-F55036?style=for-the-badge)](https://groq.com)
+[![Groq](https://img.shields.io/badge/Groq-gpt--oss--120b-F55036?style=for-the-badge)](https://groq.com)
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-Realtime-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
@@ -18,7 +18,7 @@ _Monitor, analyze, and respond — before the world even blinks._
 
 ## 📖 About
 
-**SANGYAN AI** is an autonomous, multi-agent crisis response dashboard that detects, analyzes, and generates response plans for real-world disasters in real time. It combines live seismic data from **USGS**, weather intelligence from **Open-Meteo**, and the reasoning power of **LLaMA 3.3 70B via Groq** to deliver actionable intelligence through a pipeline of three specialized AI agents.
+**SANGYAN AI** is an autonomous, multi-agent crisis response dashboard that detects, analyzes, and generates response plans for real-world disasters in real time. It combines live seismic data from **USGS**, weather intelligence from **Open-Meteo**, and the reasoning power of **GPT OSS 120B via Groq** to deliver actionable intelligence through a pipeline of three specialized AI agents.
 
 > **Built for hackathons. Designed for real impact.**
 
@@ -68,7 +68,7 @@ _Monitor, analyze, and respond — before the world even blinks._
 │         │                 │                     │           │
 │         ▼                 ▼                     ▼           │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │          Groq API  (LLaMA 3.3 70B Versatile)        │   │
+│  │          Groq API  (GPT OSS 120B)                 │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                             │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
@@ -110,14 +110,14 @@ Generates a concrete response plan with specific action steps, required resource
 ### Prerequisites
 
 - **Node.js** v18+
-- **MongoDB** Atlas cluster (free tier works)
+- **MongoDB** Atlas cluster (optional, free tier works)
 - **Groq API Key** — [Get one free at groq.com](https://console.groq.com)
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/adityagrinds/CrisisAI.git
-cd CrisisAI
+git clone https://github.com/adityagrinds/Sangyan AI.git
+cd Sangyan AI
 ```
 
 ### 2. Set Up the Backend
@@ -170,7 +170,7 @@ Navigate to **[http://localhost:5173](http://localhost:5173)** and you're live. 
 ## 📁 Project Structure
 
 ```
-CrisisAI/
+Sangyan AI/
 ├── backend/
 │   ├── agents/
 │   │   ├── monitorAgent.js      # Crisis detection agent
@@ -231,7 +231,7 @@ CrisisAI/
 |-------|-----------|
 | **Frontend** | React 19, Vite 8, TypeScript, Leaflet, Socket.IO Client |
 | **Backend** | Node.js, Express 4, Socket.IO, Mongoose, node-cron |
-| **AI / LLM** | Groq SDK → LLaMA 3.3 70B Versatile |
+| **AI / LLM** | Groq SDK → GPT OSS 120B |
 | **Database** | MongoDB Atlas |
 | **Live Data** | USGS Earthquake API, Open-Meteo Weather API |
 | **Real-time** | WebSockets via Socket.IO |

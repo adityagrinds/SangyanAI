@@ -1,4 +1,5 @@
 const cron = require("node-cron");
+const mongoose = require("mongoose");
 const { getRecentEarthquakes } = require("./liveData");
 const { monitorAgent } = require("../agents/monitorAgent");
 const { analyzerAgent } = require("../agents/analyzerAgent");
@@ -17,9 +18,11 @@ function setSocketIO(socketIO) {
 async function processEarthquakeAutonomously(earthquake) {
   if (!io) return;
 
-  // Check if we already processed this earthquake
-  const existing = await Incident.findOne({ title: earthquake.title });
-  if (existing) return null;
+  // Check if we already processed this earthquake (only if DB connected)
+  if (mongoose.connection.readyState === 1) {
+    const existing = await Incident.findOne({ title: earthquake.title });
+    if (existing) return null;
+  }
 
   const report = `LIVE EARTHQUAKE DETECTED: ${earthquake.title}. Magnitude: ${earthquake.magnitude}. Location: ${earthquake.place}. Depth: ${earthquake.depth}km. Tsunami warning: ${earthquake.tsunami ? "YES" : "No"}. Time: ${earthquake.time}. Coordinates: ${earthquake.lat}, ${earthquake.lng}.`;
 
@@ -42,29 +45,36 @@ async function processEarthquakeAutonomously(earthquake) {
   const responderResult = await responderAgent(monitorResult, { ...analyzerResult, memoryContext });
   io.emit("agentUpdate", { agent: "Responder Agent", status: "done", message: `[AUTO] Response plan ready: ${responderResult.actions?.length || 0} actions`, data: responderResult });
 
-  // Save incident
-  const incident = new Incident({
-    title: monitorResult.title || earthquake.title,
-    description: monitorResult.description,
-    type: monitorResult.type || "earthquake",
-    severity: analyzerResult.severity,
-    location: monitorResult.location || { name: earthquake.place, lat: earthquake.lat, lng: earthquake.lng },
-    status: "responding",
-    agentLogs: [
-      { agent: "Monitor Agent", message: JSON.stringify(monitorResult) },
-      { agent: "Analyzer Agent", message: JSON.stringify(analyzerResult) },
-      { agent: "Responder Agent", message: JSON.stringify(responderResult) },
-      ...(memory ? [{ agent: "Memory System", message: JSON.stringify(memory) }] : []),
-    ],
-    response: {
-      actions: responderResult.actions || [],
-      resources: (responderResult.resources || []).map((r) => r.name || r),
-      alerts: (responderResult.alerts || []).map((a) => a.message || a),
-    },
-  });
+  // Save incident (only if DB connected)
+  let incident = null;
+  try {
+    incident = new Incident({
+      title: monitorResult.title || earthquake.title,
+      description: monitorResult.description,
+      type: monitorResult.type || "earthquake",
+      severity: analyzerResult.severity,
+      location: monitorResult.location || { name: earthquake.place, lat: earthquake.lat, lng: earthquake.lng },
+      status: "responding",
+      agentLogs: [
+        { agent: "Monitor Agent", message: JSON.stringify(monitorResult) },
+        { agent: "Analyzer Agent", message: JSON.stringify(analyzerResult) },
+        { agent: "Responder Agent", message: JSON.stringify(responderResult) },
+        ...(memory ? [{ agent: "Memory System", message: JSON.stringify(memory) }] : []),
+      ],
+      response: {
+        actions: responderResult.actions || [],
+        resources: (responderResult.resources || []).map((r) => r.name || r),
+        alerts: (responderResult.alerts || []).map((a) => a.message || a),
+      },
+    });
 
-  await incident.save();
-  io.emit("newIncident", incident);
+    if (mongoose.connection.readyState === 1) {
+      await incident.save();
+      io.emit("newIncident", incident);
+    }
+  } catch (dbErr) {
+    console.warn("[DB] Could not save auto-monitored incident:", dbErr.message);
+  }
 
   return incident;
 }

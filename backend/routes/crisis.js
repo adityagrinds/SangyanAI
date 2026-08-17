@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 const Incident = require("../models/Incident");
 const { monitorAgent } = require("../agents/monitorAgent");
@@ -82,32 +83,39 @@ router.post("/process", async (req, res) => {
     io.emit("agentUpdate", { agent: "Responder Agent", status: "done", message: `Response plan ready: ${responderResult.actions?.length || 0} actions identified`, data: responderResult });
     io.emit("reasoningUpdate", { chain: reasoningChain });
 
-    // Save to database
-    const incident = new Incident({
-      title: monitorResult.title,
-      description: monitorResult.description,
-      type: monitorResult.type,
-      severity: analyzerResult.severity,
-      location: monitorResult.location,
-      status: "responding",
-      agentLogs: [
-        { agent: "Monitor Agent", message: JSON.stringify(monitorResult) },
-        { agent: "Analyzer Agent", message: JSON.stringify(analyzerResult) },
-        { agent: "Responder Agent", message: JSON.stringify(responderResult) },
-        ...(memory ? [{ agent: "Memory System", message: JSON.stringify(memory) }] : []),
-      ],
-      response: {
-        actions: responderResult.actions || [],
-        resources: (responderResult.resources || []).map((r) => r.name || r),
-        alerts: (responderResult.alerts || []).map((a) => a.message || a),
-      },
-    });
+    // Save to database (skip if MongoDB not connected)
+    let incident = null;
+    try {
+      incident = new Incident({
+        title: monitorResult.title,
+        description: monitorResult.description,
+        type: monitorResult.type,
+        severity: analyzerResult.severity,
+        location: monitorResult.location,
+        status: "responding",
+        agentLogs: [
+          { agent: "Monitor Agent", message: JSON.stringify(monitorResult) },
+          { agent: "Analyzer Agent", message: JSON.stringify(analyzerResult) },
+          { agent: "Responder Agent", message: JSON.stringify(responderResult) },
+          ...(memory ? [{ agent: "Memory System", message: JSON.stringify(memory) }] : []),
+        ],
+        response: {
+          actions: responderResult.actions || [],
+          resources: (responderResult.resources || []).map((r) => r.name || r),
+          alerts: (responderResult.alerts || []).map((a) => a.message || a),
+        },
+      });
 
-    await incident.save();
-    io.emit("newIncident", incident);
+      if (mongoose.connection.readyState === 1) {
+        await incident.save();
+        io.emit("newIncident", incident);
+      }
+    } catch (dbErr) {
+      console.warn("[DB] Could not save incident:", dbErr.message);
+    }
 
     res.json({
-      incident,
+      incident: incident || { title: monitorResult.title, type: monitorResult.type, severity: analyzerResult.severity },
       details: {
         monitor: monitorResult,
         analysis: analyzerResult,
@@ -160,16 +168,18 @@ router.get("/auto-monitor/status", (req, res) => {
 // Get all incidents
 router.get("/incidents", async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) return res.json([]);
     const incidents = await Incident.find().sort({ createdAt: -1 });
     res.json(incidents);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch incidents" });
+    res.json([]);
   }
 });
 
 // Get single incident
 router.get("/incidents/:id", async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) return res.status(503).json({ error: "Database not connected" });
     const incident = await Incident.findById(req.params.id);
     if (!incident) return res.status(404).json({ error: "Incident not found" });
     res.json(incident);

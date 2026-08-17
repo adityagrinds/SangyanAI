@@ -45,21 +45,30 @@ io.on("connection", (socket) => {
   });
 });
 
-// Connect to MongoDB and start server
+// Connect to MongoDB (optional) and start server
 const PORT = process.env.PORT || 5000;
 
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("Connected to MongoDB");
-    server.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err.message);
-    console.log("Starting server without MongoDB...");
-    server.listen(PORT, () => {
-      console.log(`Server running on port ${PORT} (no database)`);
-    });
+function startServer(dbStatus) {
+  server.listen(PORT, () => {
+    console.log(`\n🚀 Server running on port ${PORT} ${dbStatus}`);
+    console.log(`   API: http://localhost:${PORT}`);
+    console.log(`   Health: http://localhost:${PORT}/\n`);
   });
+}
+
+if (process.env.MONGODB_URI && process.env.MONGODB_URI !== "mongodb+srv://username:password@cluster.mongodb.net/crisis-response") {
+  mongoose
+    .connect(process.env.MONGODB_URI)
+    .then(() => {
+      console.log("[MongoDB] ✅ Connected successfully");
+      startServer("(with database)");
+    })
+    .catch((err) => {
+      console.warn(`[MongoDB] ⚠ Connection failed: ${err.message}`);
+      console.log("[MongoDB] Running without database — incidents won't be saved");
+      startServer("(no database)");
+    });
+} else {
+  console.log("[MongoDB] No MONGODB_URI configured — running without database");
+  startServer("(no database)");
+}

@@ -1,7 +1,13 @@
 const Groq = require("groq-sdk");
 require("dotenv").config();
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+let groq = null;
+if (process.env.GROQ_API_KEY) {
+  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  console.log("[Groq] API key loaded — using model: openai/gpt-oss-120b");
+} else {
+  console.warn("[Groq] ⚠ No GROQ_API_KEY found in .env — will use local fallback logic for all agents");
+}
 
 function safeJsonParse(text) {
   try {
@@ -191,30 +197,53 @@ function fallbackResponder(crisisData, analysisData) {
 async function callAgent(systemPrompt, userMessage) {
   const inputText = textFromInput(userMessage);
 
-  try {
-    const response = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: inputText },
-      ],
-      temperature: 0.3,
-      max_tokens: 1024,
-      response_format: { type: "json_object" },
-    });
-
-    const text = response.choices[0].message.content;
-    return safeJsonParse(text);
-  } catch (error) {
+  // If no API key configured, skip directly to fallback
+  if (!groq) {
     const prompt = systemPrompt.toLowerCase();
-    if (prompt.includes("monitor agent")) {
-      return fallbackMonitor(inputText);
-    }
+    if (prompt.includes("monitor agent")) return fallbackMonitor(inputText);
     if (prompt.includes("analyzer agent")) {
       const parsed = typeof userMessage === "string" ? safeJsonParse(userMessage) : userMessage;
       return fallbackAnalyzer(parsed);
     }
     if (prompt.includes("responder agent")) {
+      let parsedInput = userMessage;
+      if (typeof userMessage === "string") {
+        try { parsedInput = JSON.parse(userMessage); } catch { parsedInput = { crisis: userMessage, analysis: {} }; }
+      }
+      return fallbackResponder(parsedInput?.crisis || parsedInput, parsedInput?.analysis || {});
+    }
+    throw new Error("GROQ_API_KEY is not set and no fallback is available for this agent.");
+  }
+
+  try {
+    const response = await groq.chat.completions.create({
+      model: "openai/gpt-oss-120b",
+      messages: [
+        { role: "system", content: systemPrompt + "\n\nIMPORTANT: You MUST respond ONLY with valid JSON. No extra text, no markdown, no code fences." },
+        { role: "user", content: inputText },
+      ],
+      temperature: 0.3,
+      max_tokens: 1024,
+    });
+
+    const text = response.choices[0].message.content;
+    return safeJsonParse(text);
+  } catch (error) {
+    console.error(`[Groq API Error] ${error.message || error}`);
+
+    // Graceful fallback — use local logic instead of crashing
+    const prompt = systemPrompt.toLowerCase();
+    if (prompt.includes("monitor agent")) {
+      console.log("[Fallback] Using local monitor agent");
+      return fallbackMonitor(inputText);
+    }
+    if (prompt.includes("analyzer agent")) {
+      console.log("[Fallback] Using local analyzer agent");
+      const parsed = typeof userMessage === "string" ? safeJsonParse(userMessage) : userMessage;
+      return fallbackAnalyzer(parsed);
+    }
+    if (prompt.includes("responder agent")) {
+      console.log("[Fallback] Using local responder agent");
       let parsedInput = userMessage;
       if (typeof userMessage === "string") {
         try {
