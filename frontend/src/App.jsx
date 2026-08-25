@@ -8,6 +8,7 @@ import IncidentList from "./components/IncidentList";
 import LiveDataFeed from "./components/LiveDataFeed";
 import AutoMonitor from "./components/AutoMonitor";
 import ReasoningChain from "./components/ReasoningChain";
+import LandingPage from "./components/LandingPage";
 import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -109,42 +110,7 @@ function App() {
   };
 
   if (showLanding) {
-    return (
-      <div className="landing">
-        <div className="landing-bg"></div>
-        <div className="landing-ink"></div>
-        <div className="landing-particles"></div>
-        <header className="landing-header">
-          <div className="logo">
-            <span className="logo-icon">🛡️</span>
-            <h1>SANGYAN AI</h1>
-          </div>
-        </header>
-        <main className="landing-content">
-          <p className="eyebrow">Welcome to our</p>
-          <h1 className="landing-title">
-            <span>SANGYAN</span>
-            <span>AI</span>
-            <span>Response</span>
-            <span>Studio</span>
-          </h1>
-          <p className="landing-sub">
-            Live, factual, multi-agent disaster intelligence with breathtaking clarity. Monitor, analyze, and respond before the world even blinks.
-          </p>
-          <div className="landing-actions">
-            <button className="btn-primary hero-btn" onClick={handleHeroCta}>
-              Let&apos;s revolutionize
-            </button>
-            <button className="ghost-btn" onClick={handleHeroCta}>Take a tour</button>
-          </div>
-        </main>
-        <div className="landing-social">
-          <span>⬤</span>
-          <span>◎</span>
-          <span>◉</span>
-        </div>
-      </div>
-    );
+    return <LandingPage onEnter={handleHeroCta} />;
   }
 
   return (

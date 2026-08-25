@@ -28,6 +28,7 @@ _Monitor, analyze, and respond — before the world even blinks._
 
 | Feature | Description |
 |---|---|
+| 🎬 **Cinematic 3D Landing** | Interactive Three.js globe with pulsing crisis hotspots, animated stats, and premium Playfair Display typography |
 | 🤖 **3-Agent AI Pipeline** | Monitor → Analyzer → Responder chain processes crises end-to-end |
 | 🌍 **Live Earthquake Feed** | Real-time data from USGS Earthquake API (no API key needed) |
 | 🌦️ **Weather Intelligence** | Open-Meteo integration enriches crisis data with local weather conditions |
@@ -191,17 +192,19 @@ Sangyan AI/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── AgentActivity.jsx    # Live agent status feed
-│   │   │   ├── AutoMonitor.jsx      # Auto-scan control panel
-│   │   │   ├── CrisisMap.jsx        # Leaflet interactive map
-│   │   │   ├── Dashboard.jsx        # Incident detail dashboard
-│   │   │   ├── IncidentList.jsx     # Historical incident list
-│   │   │   ├── LiveDataFeed.jsx     # Real-time earthquake feed
-│   │   │   ├── ReasoningChain.jsx   # Agent reasoning visualizer
-│   │   │   └── ReportForm.jsx       # Manual report submission
-│   │   ├── App.jsx                  # Main app with routing
-│   │   ├── App.css                  # Full design system
-│   │   └── main.jsx                 # React entry point
+│   │   │   ├── LandingPage.jsx     # Cinematic hero with animated counters
+│   │   │   ├── HeroScene.jsx       # 3D globe with pulsing hotspots (R3F)
+│   │   │   ├── AgentActivity.jsx   # Live agent status feed
+│   │   │   ├── AutoMonitor.jsx     # Auto-scan control panel
+│   │   │   ├── CrisisMap.jsx       # Leaflet interactive map
+│   │   │   ├── Dashboard.jsx       # Incident detail dashboard
+│   │   │   ├── IncidentList.jsx    # Historical incident list
+│   │   │   ├── LiveDataFeed.jsx    # Real-time earthquake feed
+│   │   │   ├── ReasoningChain.jsx  # Agent reasoning visualizer
+│   │   │   └── ReportForm.jsx      # Manual report submission
+│   │   ├── App.jsx                 # Main app with routing
+│   │   ├── App.css                 # Full design system
+│   │   └── main.jsx                # React entry point
 │   └── .env.example
 ├── .gitignore
 └── README.md
@@ -229,7 +232,7 @@ Sangyan AI/
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | React 19, Vite 8, TypeScript, Leaflet, Socket.IO Client |
+| **Frontend** | React 19, Vite 8, Three.js (React Three Fiber), GSAP, Leaflet, Socket.IO Client |
 | **Backend** | Node.js, Express 4, Socket.IO, Mongoose, node-cron |
 | **AI / LLM** | Groq SDK → GPT OSS 120B |
 | **Database** | MongoDB Atlas |
