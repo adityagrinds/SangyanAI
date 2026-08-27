@@ -5,6 +5,8 @@
 _Live, factual, multi-agent disaster intelligence with breathtaking clarity._
 _Monitor, analyze, and respond — before the world even blinks._
 
+> Contribution visibility check: testing GitHub contribution graph after email verification.
+
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com)
