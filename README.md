@@ -29,6 +29,7 @@ _Monitor, analyze, and respond — before the world even blinks._
 | Feature | Description |
 |---|---|
 | 🎬 **Cinematic 3D Landing** | Interactive Three.js globe with pulsing crisis hotspots, animated stats, and premium Playfair Display typography |
+| ✨ **Premium UI Polish** | Glassmorphism dashboard header, sticky navigation, and refined typography keep the experience cinematic and readable |
 | 🤖 **3-Agent AI Pipeline** | Monitor → Analyzer → Responder chain processes crises end-to-end |
 | 🌍 **Live Earthquake Feed** | Real-time data from USGS Earthquake API (no API key needed) |
 | 🌦️ **Weather Intelligence** | Open-Meteo integration enriches crisis data with local weather conditions |

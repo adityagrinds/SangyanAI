@@ -21,7 +21,7 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Playfair Display', serif;
   background: radial-gradient(circle at 20% 20%, rgba(69, 181, 255, 0.08), transparent 35%),
     radial-gradient(circle at 80% 0%, rgba(125, 100, 255, 0.1), transparent 30%),
     radial-gradient(circle at 50% 80%, rgba(15, 204, 174, 0.12), transparent 35%),
@@ -30,6 +30,20 @@ body {
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+}
+
+button,
+input,
+textarea,
+select,
+label,
+span,
+strong,
+small,
+p,
+li,
+div {
+  font-family: inherit;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -372,16 +386,25 @@ body::before {
   max-width: 1440px;
   margin: 0 auto;
   padding: 0 20px 20px;
+  position: relative;
 }
 
 /* Header */
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(61, 80, 122, 0.45);
+  border-radius: 16px;
+  margin: 12px 0 16px;
+  background: rgba(10, 18, 36, 0.55);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
 }
 
 .hero {
@@ -715,6 +738,26 @@ body::before {
   background: var(--bg-primary);
   padding: 4px 10px;
   border-radius: 10px;
+}
+
+.map-container {
+  font-family: 'Playfair Display', serif;
+}
+
+.map-container .card-header h2,
+.map-container .update-count {
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 0.02em;
+}
+
+.map-container .card-header h2 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.map-container .update-count {
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* Report Form */
