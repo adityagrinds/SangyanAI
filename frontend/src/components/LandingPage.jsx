@@ -147,8 +147,8 @@ export default function LandingPage({ onEnter }) {
         <h1 className="landing-title">
           <span className="lp-word">SANGYAN</span>
           <span className="lp-word lp-gradient">AI</span>
+          <span className="lp-word">Disaster</span>
           <span className="lp-word">Response</span>
-          <span className="lp-word">Studio</span>
         </h1>
 
         <p className="lp-subtitle">

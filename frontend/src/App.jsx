@@ -125,10 +125,6 @@ function App() {
         </div>
         <div className="header-right">
           <button className="ghost-btn small" onClick={handleBackToLanding}>◀ Back</button>
-          <div className={`status-badge ${processing ? "active" : "idle"}`}>
-            <span className="status-dot"></span>
-            {processing ? "Agents Working" : "System Ready"}
-          </div>
         </div>
       </header>
 
