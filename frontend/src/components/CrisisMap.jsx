@@ -20,8 +20,20 @@ const severityColors = {
 
 const geocodeCache = new Map();
 
+function normalizeCoordinates(location) {
+  if (!location) return null;
+
+  const lat = Number(location.lat);
+  const lng = Number(location.lng);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (lat === 0 && lng === 0) return null;
+
+  return { lat, lng, name: location.name || "Unknown location" };
+}
+
 function hasValidCoordinates(location) {
-  return Number.isFinite(Number(location?.lat)) && Number.isFinite(Number(location?.lng)) && !(Number(location?.lat) === 0 && Number(location?.lng) === 0);
+  return !!normalizeCoordinates(location);
 }
 
 async function geocodeLocation(name) {
@@ -65,20 +77,24 @@ async function geocodeLocation(name) {
   }
 }
 
-function createIcon(severity) {
+function createIcon(severity, isSelected = false) {
   const color = severityColors[severity] || "#6b7280";
+  const size = isSelected ? 28 : 24;
+  const border = isSelected ? 4 : 3;
+
   return L.divIcon({
     className: "custom-marker",
     html: `<div style="
       background: ${color};
-      width: 24px;
-      height: 24px;
+      width: ${size}px;
+      height: ${size}px;
       border-radius: 50%;
-      border: 3px solid white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      border: ${border}px solid white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+      transform: scale(${isSelected ? 1.2 : 1});
     "></div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
   });
 }
 
@@ -130,16 +146,22 @@ function CurrentLocationFollower({ location }) {
 function CrisisMap({ incidents, currentIncident }) {
   const currentLocation = currentIncident?.location;
   const currentMarkerLocation = hasValidCoordinates(currentLocation)
-    ? currentLocation
+    ? normalizeCoordinates(currentLocation)
     : currentLocation?.name
       ? currentLocation
       : null;
+
+  const validIncidents = incidents.filter((incident) => {
+    if (!hasValidCoordinates(incident?.location)) return false;
+    if (!currentIncident) return true;
+    return incident?._id !== currentIncident?._id;
+  });
 
   return (
     <div className="card map-container">
       <div className="card-header">
         <h2>🗺️ Crisis Map</h2>
-        <span className="update-count">{incidents.length} incidents</span>
+        <span className="update-count">{validIncidents.length} incidents</span>
       </div>
       <MapContainer
         center={[20, 0]}
@@ -151,23 +173,39 @@ function CrisisMap({ incidents, currentIncident }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {currentMarkerLocation && <CurrentLocationFollower location={currentMarkerLocation} />}
-        {incidents.map(
-          (incident, i) =>
-            hasValidCoordinates(incident.location) && (
-              <Marker
-                key={incident._id || i}
-                position={[incident.location.lat, incident.location.lng]}
-                icon={createIcon(incident.severity)}
-              >
-                <Popup>
-                  <strong>{incident.title}</strong>
-                  <br />
-                  Severity: {incident.severity}
-                  <br />
-                  Type: {incident.type}
-                </Popup>
-              </Marker>
-            )
+
+        {currentIncident && hasValidCoordinates(currentIncident.location) && (
+          <Marker
+            key={currentIncident._id || "current-selected"}
+            position={[Number(currentIncident.location.lat), Number(currentIncident.location.lng)]}
+            icon={createIcon(currentIncident.severity, true)}
+          >
+            <Popup>
+              <strong>{currentIncident.title}</strong>
+              <br />
+              Severity: {currentIncident.severity}
+              <br />
+              Type: {currentIncident.type}
+            </Popup>
+          </Marker>
+        )}
+
+        {validIncidents.map(
+          (incident, i) => (
+            <Marker
+              key={incident._id || i}
+              position={[Number(incident.location.lat), Number(incident.location.lng)]}
+              icon={createIcon(incident.severity, currentIncident?._id === incident._id)}
+            >
+              <Popup>
+                <strong>{incident.title}</strong>
+                <br />
+                Severity: {incident.severity}
+                <br />
+                Type: {incident.type}
+              </Popup>
+            </Marker>
+          )
         )}
       </MapContainer>
     </div>
