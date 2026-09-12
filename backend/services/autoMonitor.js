@@ -5,6 +5,7 @@ const { monitorAgent } = require("../agents/monitorAgent");
 const { analyzerAgent } = require("../agents/analyzerAgent");
 const { responderAgent } = require("../agents/responderAgent");
 const { getRelevantMemory, buildMemoryContext } = require("./memory");
+const { enrichCrisisContext } = require("./factEnrichment");
 const Incident = require("../models/Incident");
 
 let isAutoMonitoring = false;
@@ -37,13 +38,29 @@ async function processEarthquakeAutonomously(earthquake) {
   const memory = await getRelevantMemory("earthquake");
   const memoryContext = buildMemoryContext(memory);
 
-  io.emit("agentUpdate", { agent: "Analyzer Agent", status: "working", message: `[AUTO] Analyzing severity...${memory ? ` (referencing ${memory.count} past incidents)` : ""}` });
-  const analyzerResult = await analyzerAgent({ ...monitorResult, memoryContext });
-  io.emit("agentUpdate", { agent: "Analyzer Agent", status: "done", message: `[AUTO] Severity: ${analyzerResult.severity}, Priority: ${analyzerResult.priorityLevel}/10`, data: analyzerResult });
+  // Fact Enrichment — fetch REAL population & facilities for this earthquake location
+  io.emit("agentUpdate", { agent: "Fact Enrichment", status: "working", message: `[AUTO] Fetching real data for ${earthquake.place}...` });
+  let enrichedFacts = null;
+  try {
+    enrichedFacts = await enrichCrisisContext(
+      { name: earthquake.place, lat: earthquake.lat, lng: earthquake.lng },
+      "earthquake",
+      "earthquake"
+    );
+    const pop = enrichedFacts?.populationInfo?.population;
+    const facCount = enrichedFacts?.nearbyFacilities?.length || 0;
+    io.emit("agentUpdate", { agent: "Fact Enrichment", status: "done", message: `[AUTO] ✅ Population: ${pop ? pop.toLocaleString() : "N/A"} | Facilities: ${facCount}`, data: enrichedFacts });
+  } catch (enrichErr) {
+    io.emit("agentUpdate", { agent: "Fact Enrichment", status: "done", message: "[AUTO] ⚠️ Real data unavailable — hallucination prevention active" });
+  }
 
-  io.emit("agentUpdate", { agent: "Responder Agent", status: "working", message: "[AUTO] Generating response plan..." });
-  const responderResult = await responderAgent(monitorResult, { ...analyzerResult, memoryContext });
-  io.emit("agentUpdate", { agent: "Responder Agent", status: "done", message: `[AUTO] Response plan ready: ${responderResult.actions?.length || 0} actions`, data: responderResult });
+  io.emit("agentUpdate", { agent: "Analyzer Agent", status: "working", message: `[AUTO] Analyzing severity with real data...${memory ? ` (referencing ${memory.count} past incidents)` : ""}` });
+  const analyzerResult = await analyzerAgent({ ...monitorResult, memoryContext }, enrichedFacts);
+  io.emit("agentUpdate", { agent: "Analyzer Agent", status: "done", message: `[AUTO] Severity: ${analyzerResult.severity}, Priority: ${analyzerResult.priorityLevel}/10, Affected: ${analyzerResult.estimatedAffectedPopulation?.toLocaleString() || "N/A"}`, data: analyzerResult });
+
+  io.emit("agentUpdate", { agent: "Responder Agent", status: "working", message: `[AUTO] Generating response plan using ${enrichedFacts?.nearbyFacilities?.length || 0} real facilities...` });
+  const responderResult = await responderAgent(monitorResult, { ...analyzerResult, memoryContext }, enrichedFacts);
+  io.emit("agentUpdate", { agent: "Responder Agent", status: "done", message: `[AUTO] Response plan ready: ${responderResult.actions?.length || 0} actions, ${responderResult.resources?.length || 0} verified facilities`, data: responderResult });
 
   // Save incident (only if DB connected)
   let incident = null;

@@ -9,6 +9,7 @@ const { getRelevantMemory, buildMemoryContext } = require("../services/memory");
 const { getGlobalCrisisData, getRecentEarthquakes } = require("../services/liveData");
 const { startAutoMonitor, stopAutoMonitor, getAutoMonitorStatus } = require("../services/autoMonitor");
 const { resolveIncidentLocation } = require("../services/locationResolver");
+const { enrichCrisisContext } = require("../services/factEnrichment");
 
 // Process a new crisis report through all 3 agents with memory + reasoning chain
 router.post("/process", async (req, res) => {
@@ -62,25 +63,49 @@ router.post("/process", async (req, res) => {
       io.emit("reasoningUpdate", { chain: reasoningChain });
     }
 
-    // Step 2: Analyzer Agent assesses severity (with memory)
-    reasoningChain.push({ agent: "Monitor Agent → Analyzer Agent", action: `Passing crisis data: type=${monitorResult.type}, location=${monitorResult.location?.name}`, timestamp: new Date() });
-    io.emit("agentUpdate", { agent: "Analyzer Agent", status: "working", message: `Analyzing severity...${memory ? ` (referencing ${memory.count} past incidents)` : ""}` });
+    // Step 2: Fact Enrichment — fetch REAL population & facilities before analysis
+    io.emit("agentUpdate", { agent: "Fact Enrichment", status: "working", message: `Fetching real census data & nearby facilities for ${monitorResult.location?.name || "location"}...` });
+    reasoningChain.push({ agent: "Fact Enrichment", action: `Querying Open-Meteo, OSM Overpass, ReliefWeb for: ${monitorResult.location?.name || "unknown location"}`, timestamp: new Date() });
+
+    let enrichedFacts = null;
+    try {
+      enrichedFacts = await enrichCrisisContext(
+        monitorResult.location || { name: monitorResult.location?.name },
+        monitorResult.type || "crisis",
+        monitorResult.type
+      );
+      const factsLog = [
+        enrichedFacts.populationInfo?.population ? `Population: ${enrichedFacts.populationInfo.population.toLocaleString()} (census)` : "Population: N/A",
+        `Facilities found: ${enrichedFacts.nearbyFacilities?.length || 0} (OSM)`,
+        enrichedFacts.reliefWebReports ? `ReliefWeb reports: ${enrichedFacts.reliefWebReports.count}` : "ReliefWeb: N/A",
+      ].join(" | ");
+      reasoningChain.push({ agent: "Fact Enrichment", action: `Real data fetched — ${factsLog}`, timestamp: new Date() });
+      io.emit("agentUpdate", { agent: "Fact Enrichment", status: "done", message: `✅ ${factsLog}`, data: enrichedFacts });
+      io.emit("reasoningUpdate", { chain: reasoningChain });
+    } catch (enrichErr) {
+      console.warn("[FactEnrichment] Non-fatal error:", enrichErr.message);
+      io.emit("agentUpdate", { agent: "Fact Enrichment", status: "done", message: "⚠️ Real data fetch failed — agents will avoid hallucinating" });
+    }
+
+    // Step 3: Analyzer Agent assesses severity (with memory + real facts)
+    reasoningChain.push({ agent: "Monitor Agent → Analyzer Agent", action: `Passing crisis data + verified facts: type=${monitorResult.type}, location=${monitorResult.location?.name}`, timestamp: new Date() });
+    io.emit("agentUpdate", { agent: "Analyzer Agent", status: "working", message: `Analyzing severity with real data...${memory ? ` (referencing ${memory.count} past incidents)` : ""}` });
 
     const analyzerInput = { ...monitorResult, memoryContext };
-    const analyzerResult = await analyzerAgent(analyzerInput);
+    const analyzerResult = await analyzerAgent(analyzerInput, enrichedFacts);
 
-    reasoningChain.push({ agent: "Analyzer Agent", action: `Assessed severity: ${analyzerResult.severity}. Priority: ${analyzerResult.priorityLevel}/10. Est. affected: ${analyzerResult.estimatedAffectedPopulation}`, timestamp: new Date() });
+    reasoningChain.push({ agent: "Analyzer Agent", action: `Assessed severity: ${analyzerResult.severity}. Priority: ${analyzerResult.priorityLevel}/10. Est. affected: ${analyzerResult.estimatedAffectedPopulation?.toLocaleString() || "N/A"} (${analyzerResult.populationDataSource || ""})`, timestamp: new Date() });
     io.emit("agentUpdate", { agent: "Analyzer Agent", status: "done", message: `Analysis complete: Severity ${analyzerResult.severity}, Priority ${analyzerResult.priorityLevel}/10`, data: analyzerResult });
     io.emit("reasoningUpdate", { chain: reasoningChain });
 
-    // Step 3: Responder Agent creates response plan (with memory)
-    reasoningChain.push({ agent: "Analyzer Agent → Responder Agent", action: `Passing analysis: severity=${analyzerResult.severity}, risks=${analyzerResult.riskFactors?.length || 0} identified`, timestamp: new Date() });
-    io.emit("agentUpdate", { agent: "Responder Agent", status: "working", message: "Generating response plan..." });
+    // Step 4: Responder Agent creates response plan (with memory + real facilities)
+    reasoningChain.push({ agent: "Analyzer Agent → Responder Agent", action: `Passing analysis + ${enrichedFacts?.nearbyFacilities?.length || 0} real OSM facilities: severity=${analyzerResult.severity}`, timestamp: new Date() });
+    io.emit("agentUpdate", { agent: "Responder Agent", status: "working", message: `Generating response plan using ${enrichedFacts?.nearbyFacilities?.length || 0} real nearby facilities...` });
 
-    const responderResult = await responderAgent(monitorResult, { ...analyzerResult, memoryContext });
+    const responderResult = await responderAgent(monitorResult, { ...analyzerResult, memoryContext }, enrichedFacts);
 
-    reasoningChain.push({ agent: "Responder Agent", action: `Plan created: ${responderResult.actions?.length || 0} actions, ${responderResult.resources?.length || 0} resources, ${responderResult.alerts?.length || 0} alerts. Evacuation: ${responderResult.evacuationNeeded ? "YES" : "No"}`, timestamp: new Date() });
-    io.emit("agentUpdate", { agent: "Responder Agent", status: "done", message: `Response plan ready: ${responderResult.actions?.length || 0} actions identified`, data: responderResult });
+    reasoningChain.push({ agent: "Responder Agent", action: `Plan created: ${responderResult.actions?.length || 0} actions, ${responderResult.resources?.length || 0} real facilities, ${responderResult.alerts?.length || 0} alerts. Evacuation: ${responderResult.evacuationNeeded ? "YES" : "No"}`, timestamp: new Date() });
+    io.emit("agentUpdate", { agent: "Responder Agent", status: "done", message: `Response plan ready: ${responderResult.actions?.length || 0} actions, ${responderResult.resources?.length || 0} verified facilities`, data: responderResult });
     io.emit("reasoningUpdate", { chain: reasoningChain });
 
     // Save to database (skip if MongoDB not connected)
