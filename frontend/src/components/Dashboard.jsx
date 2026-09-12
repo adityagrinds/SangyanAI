@@ -36,6 +36,19 @@ function Dashboard({ currentIncident }) {
           <p>{currentIncident.description}</p>
         </div>
 
+        <div className="dash-section">
+          <h4>👥 Affected Population</h4>
+          <p>
+            {currentIncident.affectedPopulation?.value != null
+              ? currentIncident.affectedPopulation.value.toLocaleString()
+              : "Not available"}
+          </p>
+          <small>
+            Status: {currentIncident.affectedPopulation?.status === "confirmed" ? "Confirmed" : "Not available"}
+            {" | "}Source: {currentIncident.affectedPopulation?.source || "No event-specific official figure found"}
+          </small>
+        </div>
+
         <div className="dashboard-grid">
           <div className="dash-section">
             <h4>🎯 Response Actions</h4>

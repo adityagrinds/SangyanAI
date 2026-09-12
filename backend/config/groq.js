@@ -88,8 +88,6 @@ function fallbackAnalyzer(crisisData) {
         ? "medium"
         : "low";
 
-  const estimatedAffectedPopulation = severity === "critical" ? 50000 : severity === "high" ? 15000 : severity === "medium" ? 5000 : 1000;
-
   const riskFactors = [];
   if (severityBasis.includes("collapsed") || severityBasis.includes("collapse")) riskFactors.push("Structural collapse risk");
   if (severityBasis.includes("trapped")) riskFactors.push("Rescue complexity and delayed extraction");
@@ -112,7 +110,9 @@ function fallbackAnalyzer(crisisData) {
 
   return {
     severity,
-    estimatedAffectedPopulation,
+    estimatedAffectedPopulation: null,
+    populationStatus: "not_available",
+    populationDataSource: "Not available — no event-specific official figure found",
     riskFactors,
     immediateThreats,
     potentialEscalation: "Conditions could worsen without rapid coordination, evacuation, and resource deployment.",

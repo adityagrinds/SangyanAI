@@ -23,6 +23,11 @@ const incidentSchema = new mongoose.Schema({
     enum: ["detected", "analyzing", "responding", "resolved"],
     default: "detected",
   },
+  affectedPopulation: {
+    value: { type: Number, min: 0, default: null },
+    status: { type: String, enum: ["confirmed", "not_available"], default: "not_available" },
+    source: { type: String, default: "Not available" },
+  },
   agentLogs: [
     {
       agent: String,

@@ -72,6 +72,11 @@ async function processEarthquakeAutonomously(earthquake) {
       severity: analyzerResult.severity,
       location: monitorResult.location || { name: earthquake.place, lat: earthquake.lat, lng: earthquake.lng },
       status: "responding",
+      affectedPopulation: {
+        value: analyzerResult.estimatedAffectedPopulation,
+        status: analyzerResult.populationStatus,
+        source: analyzerResult.populationDataSource,
+      },
       agentLogs: [
         { agent: "Monitor Agent", message: JSON.stringify(monitorResult) },
         { agent: "Analyzer Agent", message: JSON.stringify(analyzerResult) },

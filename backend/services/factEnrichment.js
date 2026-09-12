@@ -64,32 +64,26 @@ async function getAreaPopulationInfo(lat, lng, locationName) {
   }
 }
 
-// ─── Affected population model (spatial impact based on crisis type) ──────────
-function calculateAffectedPopulation(totalPopulation, crisisType, radiusKm = 50) {
-  if (!totalPopulation) return null;
+// Extract an affected-person figure only when an official report states one
+// explicitly. A city census total is not treated as a disaster impact count.
+function extractAffectedPopulation(text) {
+  if (!text) return null;
 
-  // Impact fractions are conservative estimates per crisis type
-  const impactFractions = {
-    earthquake: 0.15,  // ~15% within radius directly impacted
-    flood: 0.20,       // floods affect broader flat terrain
-    fire: 0.05,        // wildfires, limited radius
-    cyclone: 0.25,     // wide-area wind/rain damage
-    tsunami: 0.10,
-    landslide: 0.08,
-    drought: 0.30,     // affects agriculture and wide population
-    default: 0.10,
-  };
+  const normalized = text.replace(/,/g, "");
+  const patterns = [
+    /(?:affected|impacted|displaced|evacuated)[^0-9]{0,80}(\d{2,})/i,
+    /(\d{2,})[^.]{0,80}(?:people\s+(?:were\s+)?(?:affected|impacted|displaced|evacuated))/i,
+  ];
 
-  const fraction = impactFractions[crisisType?.toLowerCase()] || impactFractions.default;
-  const estimated = Math.round(totalPopulation * fraction);
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern);
+    if (match) {
+      const value = Number(match[1]);
+      if (Number.isSafeInteger(value) && value > 0) return value;
+    }
+  }
 
-  return {
-    totalCensusPopulation: totalPopulation,
-    estimatedAffectedPopulation: estimated,
-    impactFraction: fraction,
-    crisisType,
-    note: `Estimated using ${(fraction * 100).toFixed(0)}% spatial impact model for ${crisisType || "general"} crisis type`,
-  };
+  return null;
 }
 
 // ─── 2. REAL FACILITIES via OpenStreetMap Overpass API ───────────────────────
@@ -171,16 +165,25 @@ async function getReliefWebData(query, locationName) {
       date: item.fields?.date?.created,
       source: item.fields?.source?.[0]?.name,
       url: item.href,
-      // Strip HTML tags from body for clean text
+      // Keep enough report text to detect explicit affected-person figures.
       excerpt: item.fields?.["body-html"]
-        ? item.fields["body-html"].replace(/<[^>]*>/g, "").substring(0, 300).trim()
+        ? item.fields["body-html"].replace(/<[^>]*>/g, "").substring(0, 2000).trim()
         : null,
     }));
+
+    const affectedReport = reports.find((report) => {
+      report.affectedPopulation = extractAffectedPopulation(`${report.title || ""} ${report.excerpt || ""}`);
+      return report.affectedPopulation != null;
+    });
 
     return {
       source: "UNOCHA ReliefWeb (official humanitarian reports)",
       reports,
       count: reports.length,
+      affectedPopulation: affectedReport?.affectedPopulation || null,
+      affectedPopulationSource: affectedReport
+        ? `${affectedReport.source || "ReliefWeb"} — ${affectedReport.title}`
+        : null,
     };
   } catch (err) {
     console.warn("[FactEnrichment] ReliefWeb fetch failed:", err.message);
@@ -212,14 +215,17 @@ async function enrichCrisisContext(location, query, crisisType) {
   const facilityList = facilities.status === "fulfilled" ? facilities.value : [];
   const reliefData = reliefWebData.status === "fulfilled" ? reliefWebData.value : null;
 
-  // Calculate affected population based on REAL census data
-  const affectedModel = popData?.population
-    ? calculateAffectedPopulation(popData.population, crisisType)
+  const reportedAffectedPopulation = reliefData?.affectedPopulation
+    ? {
+        value: reliefData.affectedPopulation,
+        status: "confirmed",
+        source: reliefData.affectedPopulationSource,
+      }
     : null;
 
   return {
     populationInfo: popData,
-    affectedPopulationModel: affectedModel,
+    affectedPopulation: reportedAffectedPopulation,
     nearbyFacilities: facilityList,
     reliefWebReports: reliefData,
     enrichedAt: new Date().toISOString(),
@@ -236,5 +242,5 @@ module.exports = {
   getAreaPopulationInfo,
   getNearbyFacilities,
   getReliefWebData,
-  calculateAffectedPopulation,
+  extractAffectedPopulation,
 };

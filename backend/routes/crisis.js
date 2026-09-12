@@ -118,6 +118,11 @@ router.post("/process", async (req, res) => {
         severity: analyzerResult.severity,
         location: monitorResult.location,
         status: "responding",
+        affectedPopulation: {
+          value: analyzerResult.estimatedAffectedPopulation,
+          status: analyzerResult.populationStatus,
+          source: analyzerResult.populationDataSource,
+        },
         agentLogs: [
           { agent: "Monitor Agent", message: JSON.stringify(monitorResult) },
           { agent: "Analyzer Agent", message: JSON.stringify(analyzerResult) },

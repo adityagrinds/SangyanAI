@@ -7,22 +7,20 @@ const { callAgent } = require("../config/groq");
  */
 
 function buildAnalyzerPrompt(enrichedFacts) {
-  const pop = enrichedFacts?.affectedPopulationModel;
-  const popInfo = enrichedFacts?.populationInfo;
+  const affectedPopulation = enrichedFacts?.affectedPopulation;
 
   let populationSection = "";
-  if (pop && pop.estimatedAffectedPopulation) {
+  if (affectedPopulation?.value) {
     populationSection = `
-VERIFIED POPULATION DATA (DO NOT CHANGE THESE NUMBERS):
-- City/Area: ${popInfo?.cityName || "N/A"}, ${popInfo?.country || ""}
-- Official Census Population: ${pop.totalCensusPopulation.toLocaleString()}
-- Estimated Affected Population: ${pop.estimatedAffectedPopulation.toLocaleString()} (${(pop.impactFraction * 100).toFixed(0)}% impact model for ${pop.crisisType})
-- Data Source: ${popInfo?.source || "Open-Meteo Geocoding API"}
-⚠ You MUST use exactly ${pop.estimatedAffectedPopulation} as the estimatedAffectedPopulation. Do NOT guess or invent a different number.
+VERIFIED EVENT-SPECIFIC AFFECTED POPULATION (DO NOT CHANGE THIS NUMBER):
+- Affected Population: ${affectedPopulation.value.toLocaleString()}
+- Status: ${affectedPopulation.status}
+- Data Source: ${affectedPopulation.source}
+⚠ You MUST use exactly ${affectedPopulation.value} as estimatedAffectedPopulation.
 `;
   } else {
     populationSection = `
-POPULATION DATA: Not available for this location.
+EVENT-SPECIFIC AFFECTED POPULATION: Not available from a free official source.
 ⚠ You MUST set estimatedAffectedPopulation to null. Do NOT invent or guess any population figure.
 `;
   }
@@ -51,8 +49,9 @@ STRICT RULES:
 Analyze the crisis and respond ONLY in valid JSON format (no markdown, no explanation outside JSON):
 {
   "severity": "low" | "medium" | "high" | "critical",
-  "estimatedAffectedPopulation": <exact number from VERIFIED DATA above, or null>,
-  "populationDataSource": "<source name or 'Not available'>",
+  "estimatedAffectedPopulation": <exact verified event number above, or null>,
+  "populationStatus": "confirmed" | "not_available",
+  "populationDataSource": "<official report source or 'Not available'>",
   "riskFactors": ["list of risk factors"],
   "immediateThreats": ["list of immediate threats"],
   "potentialEscalation": "description of how this could get worse",
@@ -68,14 +67,16 @@ async function analyzerAgent(crisisData, enrichedFacts) {
   const result = await callAgent(prompt, input);
 
   // ─── Programmatic guardrail: enforce real population number ───────────────
-  const verifiedPop = enrichedFacts?.affectedPopulationModel?.estimatedAffectedPopulation;
+  const verifiedPop = enrichedFacts?.affectedPopulation;
   if (verifiedPop != null) {
-    result.estimatedAffectedPopulation = verifiedPop;
-    result.populationDataSource = enrichedFacts?.populationInfo?.source || "Open-Meteo Geocoding API";
-  } else if (result.estimatedAffectedPopulation !== null && result.estimatedAffectedPopulation !== undefined) {
-    // No real data available — set to null to prevent hallucination
+    result.estimatedAffectedPopulation = verifiedPop.value;
+    result.populationStatus = verifiedPop.status;
+    result.populationDataSource = verifiedPop.source;
+  } else {
+    // No event-specific official data available — never fall back to a guess.
     result.estimatedAffectedPopulation = null;
-    result.populationDataSource = "Not available — real census data could not be fetched for this location";
+    result.populationStatus = "not_available";
+    result.populationDataSource = "Not available — no event-specific official figure found";
   }
 
   return {
