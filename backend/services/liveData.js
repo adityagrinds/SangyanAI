@@ -73,7 +73,7 @@ async function getGlobalCrisisData() {
   return {
     earthquakes: enrichedQuakes,
     timestamp: new Date(),
-    source: "USGS + Open-Meteo",
+    source: "Live public data",
   };
 }
 

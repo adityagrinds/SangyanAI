@@ -45,7 +45,8 @@ async function processEarthquakeAutonomously(earthquake) {
     enrichedFacts = await enrichCrisisContext(
       { name: earthquake.place, lat: earthquake.lat, lng: earthquake.lng },
       "earthquake",
-      "earthquake"
+      "earthquake",
+      { magnitude: earthquake.magnitude, depthKm: earthquake.depth, tsunami: earthquake.tsunami }
     );
     const pop = enrichedFacts?.populationInfo?.population;
     const facCount = enrichedFacts?.nearbyFacilities?.length || 0;
@@ -69,6 +70,8 @@ async function processEarthquakeAutonomously(earthquake) {
       title: monitorResult.title || earthquake.title,
       description: monitorResult.description,
       type: monitorResult.type || "earthquake",
+      magnitude: earthquake.magnitude,
+      depth: earthquake.depth,
       severity: analyzerResult.severity,
       location: monitorResult.location || { name: earthquake.place, lat: earthquake.lat, lng: earthquake.lng },
       status: "responding",

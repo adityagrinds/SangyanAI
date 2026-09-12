@@ -8,6 +8,8 @@ const incidentSchema = new mongoose.Schema({
     enum: ["earthquake", "flood", "fire", "storm", "epidemic", "industrial", "other"],
     default: "other",
   },
+  magnitude: { type: Number, default: null },
+  depth: { type: Number, default: null },
   severity: {
     type: String,
     enum: ["low", "medium", "high", "critical"],
@@ -25,7 +27,7 @@ const incidentSchema = new mongoose.Schema({
   },
   affectedPopulation: {
     value: { type: Number, min: 0, default: null },
-    status: { type: String, enum: ["confirmed", "not_available"], default: "not_available" },
+    status: { type: String, enum: ["confirmed", "estimated", "not_available"], default: "not_available" },
     source: { type: String, default: "Not available" },
   },
   agentLogs: [

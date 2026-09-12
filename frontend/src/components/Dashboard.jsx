@@ -34,6 +34,12 @@ function Dashboard({ currentIncident }) {
         <div className="incident-title">
           <h3>{currentIncident.title}</h3>
           <p>{currentIncident.description}</p>
+          {currentIncident.type === "earthquake" && currentIncident.magnitude != null && (
+            <p>
+              <strong>Earthquake magnitude:</strong> {Number(currentIncident.magnitude).toFixed(1)}
+              {currentIncident.depth != null ? ` • Depth: ${Number(currentIncident.depth).toFixed(1)} km` : ""}
+            </p>
+          )}
         </div>
 
         <div className="dash-section">
@@ -44,7 +50,11 @@ function Dashboard({ currentIncident }) {
               : "Not available"}
           </p>
           <small>
-            Status: {currentIncident.affectedPopulation?.status === "confirmed" ? "Confirmed" : "Not available"}
+            Status: {currentIncident.affectedPopulation?.status === "confirmed"
+              ? "Confirmed"
+              : currentIncident.affectedPopulation?.status === "estimated"
+                ? "Estimated"
+                : "Not available"}
             {" | "}Source: {currentIncident.affectedPopulation?.source || "No event-specific official figure found"}
           </small>
         </div>

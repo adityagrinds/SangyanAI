@@ -65,19 +65,24 @@ router.post("/process", async (req, res) => {
 
     // Step 2: Fact Enrichment — fetch REAL population & facilities before analysis
     io.emit("agentUpdate", { agent: "Fact Enrichment", status: "working", message: `Fetching real census data & nearby facilities for ${monitorResult.location?.name || "location"}...` });
-    reasoningChain.push({ agent: "Fact Enrichment", action: `Querying Open-Meteo, OSM Overpass, ReliefWeb for: ${monitorResult.location?.name || "unknown location"}`, timestamp: new Date() });
+    reasoningChain.push({ agent: "Fact Enrichment", action: `Collecting population, facility and official disaster data for: ${monitorResult.location?.name || "unknown location"}`, timestamp: new Date() });
 
     let enrichedFacts = null;
     try {
       enrichedFacts = await enrichCrisisContext(
         monitorResult.location || { name: monitorResult.location?.name },
         monitorResult.type || "crisis",
-        monitorResult.type
+        monitorResult.type,
+        {
+          magnitude: monitorResult.magnitude,
+          depthKm: monitorResult.depth,
+          tsunami: monitorResult.tsunami,
+        }
       );
       const factsLog = [
         enrichedFacts.populationInfo?.population ? `Population: ${enrichedFacts.populationInfo.population.toLocaleString()} (census)` : "Population: N/A",
-        `Facilities found: ${enrichedFacts.nearbyFacilities?.length || 0} (OSM)`,
-        enrichedFacts.reliefWebReports ? `ReliefWeb reports: ${enrichedFacts.reliefWebReports.count}` : "ReliefWeb: N/A",
+        `Facilities found: ${enrichedFacts.nearbyFacilities?.length || 0}`,
+        enrichedFacts.reliefWebReports ? `Official reports found: ${enrichedFacts.reliefWebReports.count}` : "Official reports: N/A",
       ].join(" | ");
       reasoningChain.push({ agent: "Fact Enrichment", action: `Real data fetched — ${factsLog}`, timestamp: new Date() });
       io.emit("agentUpdate", { agent: "Fact Enrichment", status: "done", message: `✅ ${factsLog}`, data: enrichedFacts });
@@ -115,6 +120,8 @@ router.post("/process", async (req, res) => {
         title: monitorResult.title,
         description: monitorResult.description,
         type: monitorResult.type,
+        magnitude: monitorResult.magnitude,
+        depth: monitorResult.depth,
         severity: analyzerResult.severity,
         location: monitorResult.location,
         status: "responding",

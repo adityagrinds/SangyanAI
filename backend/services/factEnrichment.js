@@ -86,6 +86,28 @@ function extractAffectedPopulation(text) {
   return null;
 }
 
+function calculateAffectedPopulationEstimate(totalPopulation, crisisType, eventData = {}) {
+  if (!totalPopulation) return null;
+
+  if (crisisType === "earthquake" && Number.isFinite(Number(eventData.magnitude))) {
+    const magnitude = Number(eventData.magnitude);
+    const depthKm = Math.max(0, Number(eventData.depthKm) || 0);
+    const magnitudeFactor = Math.min(0.7, Math.max(0.01, 0.01 * 2 ** (magnitude - 4)));
+    const depthFactor = depthKm <= 15 ? 1 : depthKm <= 35 ? 0.75 : depthKm <= 70 ? 0.45 : 0.25;
+    const tsunamiFactor = eventData.tsunami ? 1.35 : 1;
+    const impactFraction = Math.min(0.7, magnitudeFactor * depthFactor * tsunamiFactor);
+
+    return {
+      value: Math.max(1, Math.round(totalPopulation * impactFraction)),
+      status: "estimated",
+      source: "Calculated estimate using local population and earthquake severity factors",
+      factors: { magnitude, depthKm, tsunami: Boolean(eventData.tsunami), impactFraction },
+    };
+  }
+
+  return null;
+}
+
 // ─── 2. REAL FACILITIES via OpenStreetMap Overpass API ───────────────────────
 async function getNearbyFacilities(lat, lng, radiusKm = 30) {
   try {
@@ -199,7 +221,7 @@ async function getReliefWebData(query, locationName) {
  * @param {string} crisisType — "earthquake" | "flood" | "fire" etc.
  * @returns {object} enrichedFacts with real population, facilities, reports
  */
-async function enrichCrisisContext(location, query, crisisType) {
+async function enrichCrisisContext(location, query, crisisType, eventData = {}) {
   const { name, lat, lng } = location || {};
 
   console.log(`[FactEnrichment] Fetching real data for: ${name} (${lat}, ${lng}), type: ${crisisType}`);
@@ -219,13 +241,15 @@ async function enrichCrisisContext(location, query, crisisType) {
     ? {
         value: reliefData.affectedPopulation,
         status: "confirmed",
-        source: reliefData.affectedPopulationSource,
+        source: "Official disaster report",
       }
     : null;
+  const estimatedAffectedPopulation = reportedAffectedPopulation
+    || calculateAffectedPopulationEstimate(popData?.population, crisisType, eventData);
 
   return {
     populationInfo: popData,
-    affectedPopulation: reportedAffectedPopulation,
+    affectedPopulation: estimatedAffectedPopulation,
     nearbyFacilities: facilityList,
     reliefWebReports: reliefData,
     enrichedAt: new Date().toISOString(),
@@ -243,4 +267,5 @@ module.exports = {
   getNearbyFacilities,
   getReliefWebData,
   extractAffectedPopulation,
+  calculateAffectedPopulationEstimate,
 };

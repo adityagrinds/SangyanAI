@@ -12,11 +12,11 @@ function buildAnalyzerPrompt(enrichedFacts) {
   let populationSection = "";
   if (affectedPopulation?.value) {
     populationSection = `
-VERIFIED EVENT-SPECIFIC AFFECTED POPULATION (DO NOT CHANGE THIS NUMBER):
+EVENT-SPECIFIC AFFECTED POPULATION:
 - Affected Population: ${affectedPopulation.value.toLocaleString()}
 - Status: ${affectedPopulation.status}
 - Data Source: ${affectedPopulation.source}
-⚠ You MUST use exactly ${affectedPopulation.value} as estimatedAffectedPopulation.
+⚠ You MUST use exactly ${affectedPopulation.value} as estimatedAffectedPopulation. Preserve the status as ${affectedPopulation.status}.
 `;
   } else {
     populationSection = `
@@ -50,7 +50,7 @@ Analyze the crisis and respond ONLY in valid JSON format (no markdown, no explan
 {
   "severity": "low" | "medium" | "high" | "critical",
   "estimatedAffectedPopulation": <exact verified event number above, or null>,
-  "populationStatus": "confirmed" | "not_available",
+  "populationStatus": "confirmed" | "estimated" | "not_available",
   "populationDataSource": "<official report source or 'Not available'>",
   "riskFactors": ["list of risk factors"],
   "immediateThreats": ["list of immediate threats"],

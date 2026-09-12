@@ -38,7 +38,7 @@ function LiveDataFeed() {
       <div className="live-feed-content">
         {lastFetch && (
           <div className="feed-meta">
-            Last updated: {lastFetch.toLocaleTimeString()} • Source: USGS
+            Last updated: {lastFetch.toLocaleTimeString()} • Live public data
           </div>
         )}
         {earthquakes.length === 0 ? (

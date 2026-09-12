@@ -12,6 +12,9 @@ Analyze the input and respond in JSON format:
     "lat": latitude_number,
     "lng": longitude_number
   },
+  "magnitude": "earthquake magnitude if stated, otherwise null",
+  "depth": "earthquake depth in km if stated, otherwise null",
+  "tsunami": "true/false if stated, otherwise false",
   "description": "Brief description of what is happening",
   "confidence": 0.0 to 1.0
 }
@@ -25,6 +28,8 @@ async function monitorAgent(input) {
   const type = allowedTypes.includes(result.type) ? result.type : "other";
   const confidence = Math.max(0, Math.min(1, Number(result.confidence) || 0));
   const isCrisis = Boolean(result.isCrisis);
+  const magnitude = Number(result.magnitude);
+  const depth = Number(result.depth);
 
   const loc = result.location || {};
   const lat = Number(loc.lat);
@@ -43,6 +48,9 @@ async function monitorAgent(input) {
     type,
     confidence,
     isCrisis,
+    ...(Number.isFinite(magnitude) ? { magnitude } : {}),
+    ...(Number.isFinite(depth) ? { depth } : {}),
+    tsunami: Boolean(result.tsunami),
     location: cleanedLocation,
   };
 }
