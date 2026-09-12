@@ -130,6 +130,21 @@ router.post("/process", async (req, res) => {
           status: analyzerResult.populationStatus,
           source: analyzerResult.populationDataSource,
         },
+        reportFacts: {
+          areaPopulation: enrichedFacts?.populationInfo?.population || null,
+          areaName: enrichedFacts?.populationInfo?.cityName || monitorResult.location?.name || null,
+          nearbyFacilities: (enrichedFacts?.nearbyFacilities || []).slice(0, 8).map((facility) => ({
+            name: facility.name,
+            type: facility.type,
+            distanceKm: facility.distanceKm,
+            address: facility.address,
+          })),
+          officialReports: (enrichedFacts?.reliefWebReports?.reports || []).map((report) => ({
+            title: report.title,
+            date: report.date,
+            source: report.source,
+          })),
+        },
         agentLogs: [
           { agent: "Monitor Agent", message: JSON.stringify(monitorResult) },
           { agent: "Analyzer Agent", message: JSON.stringify(analyzerResult) },
@@ -157,6 +172,21 @@ router.post("/process", async (req, res) => {
         monitor: monitorResult,
         analysis: analyzerResult,
         response: responderResult,
+        facts: {
+          areaPopulation: enrichedFacts?.populationInfo?.population || null,
+          areaName: enrichedFacts?.populationInfo?.cityName || monitorResult.location?.name || null,
+          nearbyFacilities: (enrichedFacts?.nearbyFacilities || []).slice(0, 8).map((facility) => ({
+            name: facility.name,
+            type: facility.type,
+            distanceKm: facility.distanceKm,
+            address: facility.address,
+          })),
+          officialReports: (enrichedFacts?.reliefWebReports?.reports || []).map((report) => ({
+            title: report.title,
+            date: report.date,
+            source: report.source,
+          })),
+        },
         memory,
         reasoningChain,
       },

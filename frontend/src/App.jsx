@@ -8,6 +8,7 @@ import IncidentList from "./components/IncidentList";
 import LiveDataFeed from "./components/LiveDataFeed";
 import AutoMonitor from "./components/AutoMonitor";
 import ReasoningChain from "./components/ReasoningChain";
+import OfficialReport from "./components/OfficialReport";
 import LandingPage from "./components/LandingPage";
 import "./App.css";
 
@@ -22,6 +23,7 @@ function App() {
   const [processing, setProcessing] = useState(false);
   const [reasoningChain, setReasoningChain] = useState([]);
   const [activeTab, setActiveTab] = useState("report");
+  const [showFinalReport, setShowFinalReport] = useState(false);
 
   useEffect(() => {
     socket.on("agentUpdate", (data) => {
@@ -71,7 +73,7 @@ function App() {
       });
       const data = await res.json();
       if (data.incident) {
-        setCurrentIncident(data.incident);
+        setCurrentIncident({ ...data.incident, reportDetails: data.details });
       }
       if (data.details?.reasoningChain) {
         setReasoningChain(data.details.reasoningChain);
@@ -128,15 +130,25 @@ function App() {
         </div>
       </header>
 
-      <div className="tab-bar">
-        <button className={`tab ${activeTab === "report" ? "active" : ""}`} onClick={() => setActiveTab("report")}>
-          📡 Manual Report
-        </button>
-        <button className={`tab ${activeTab === "live" ? "active" : ""}`} onClick={() => setActiveTab("live")}>
-          🌍 Live Data
-        </button>
-        <button className={`tab ${activeTab === "auto" ? "active" : ""}`} onClick={() => setActiveTab("auto")}>
-          🛰️ Auto Monitor
+      <div className="tab-bar-row">
+        <div className="tab-bar">
+          <button className={`tab ${activeTab === "report" ? "active" : ""}`} onClick={() => setActiveTab("report")}>
+            Manual Report
+          </button>
+          <button className={`tab ${activeTab === "live" ? "active" : ""}`} onClick={() => setActiveTab("live")}>
+            Live Data
+          </button>
+          <button className={`tab ${activeTab === "auto" ? "active" : ""}`} onClick={() => setActiveTab("auto")}>
+            Auto Monitor
+          </button>
+        </div>
+        <button
+          className="final-report-trigger"
+          onClick={() => setShowFinalReport(true)}
+          disabled={!currentIncident}
+          title={currentIncident ? "Open the final situation report" : "Process an incident first"}
+        >
+          Final Report
         </button>
       </div>
 
@@ -160,6 +172,9 @@ function App() {
       </main>
 
       <IncidentList incidents={incidents} onSelect={setCurrentIncident} onDelete={handleDeleteIncident} />
+      {showFinalReport && currentIncident && (
+        <OfficialReport incident={currentIncident} onClose={() => setShowFinalReport(false)} />
+      )}
     </div>
   );
 }

@@ -30,6 +30,21 @@ const incidentSchema = new mongoose.Schema({
     status: { type: String, enum: ["confirmed", "estimated", "not_available"], default: "not_available" },
     source: { type: String, default: "Not available" },
   },
+  reportFacts: {
+    areaPopulation: { type: Number, default: null },
+    areaName: { type: String, default: null },
+    nearbyFacilities: [{
+      name: String,
+      type: String,
+      distanceKm: Number,
+      address: String,
+    }],
+    officialReports: [{
+      title: String,
+      date: String,
+      source: String,
+    }],
+  },
   agentLogs: [
     {
       agent: String,

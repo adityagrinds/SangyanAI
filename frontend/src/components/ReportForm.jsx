@@ -32,7 +32,7 @@ function ReportForm({ onSubmit, processing }) {
   return (
     <div className="card report-form">
       <div className="card-header">
-        <h2>📡 Crisis Report Input</h2>
+        <h2>Crisis Report Input</h2>
         <button className="btn-secondary" onClick={loadSample} disabled={processing}>
           Load Sample
         </button>

@@ -39,6 +39,9 @@ _Monitor, analyze, and respond — before the world even blinks._
 | 🛰️ **Autonomous Auto-Monitor** | Cron-based scanner automatically detects and processes new earthquakes |
 | ⚡ **Real-time Updates** | Socket.IO pushes agent activity, incidents, and alerts live to the UI |
 | 📡 **Manual Report Submission** | Submit free-text crisis reports for instant AI-powered analysis |
+| 📄 **Final Situation Report** | Open a compact, government-ready report modal with fetched facts, response actions, facilities, alerts, and official report references |
+| 💾 **Report Export** | Save the final situation report as JPEG or use the print dialog to save it as PDF |
+| 👥 **Fact-Grounded Population** | Prefer reported affected counts; otherwise show a clearly labelled factor-based estimate or `Not available` instead of dummy values |
 | 🗑️ **Incident Management** | View, select, and delete incidents with real-time sync across clients |
 
 ---
@@ -98,12 +101,16 @@ Scans incoming reports (manual or automated) and determines if a crisis exists. 
 ### 2. 📊 Analyzer Agent
 > _"How bad is it?"_
 
-Performs deep severity analysis — estimates affected population, identifies risk factors, immediate threats, potential escalation scenarios, and assigns a priority level (1–10). Leverages historical memory for better assessments.
+Performs deep severity analysis — identifies risk factors, immediate threats, potential escalation scenarios, and assigns a priority level (1–10). Population figures are labelled as confirmed, estimated, or unavailable; the system does not substitute fabricated fallback counts. Leverages historical memory for better assessments.
 
 ### 3. 🚨 Responder Agent
 > _"What do we do?"_
 
 Generates a concrete response plan with specific action steps, required resources (hospitals, shelters, fire stations, NGOs), targeted alerts with urgency levels, evacuation recommendations, and coordination notes.
+
+### Final Situation Report
+
+After an incident is processed, the dashboard exposes a **Final Report** action in the navigation row. The modal consolidates the incident summary, severity, location, earthquake magnitude/depth when available, population status, agent assessment, response actions, alerts, nearby facilities, and official information references. The report can be exported as a JPEG or printed/saved as a PDF. Technical provider names are kept out of the user-facing report.
 
 ---
 
@@ -186,6 +193,7 @@ Sangyan AI/
 │   │   └── crisis.js            # All API endpoints
 │   ├── services/
 │   │   ├── autoMonitor.js       # Cron-based autonomous scanner
+│   │   ├── factEnrichment.js    # Population, facilities, and official report enrichment
 │   │   ├── liveData.js          # USGS + Open-Meteo integrations
 │   │   └── memory.js            # Historical incident memory
 │   ├── server.js                # Express + Socket.IO entry point
@@ -201,6 +209,7 @@ Sangyan AI/
 │   │   │   ├── Dashboard.jsx       # Incident detail dashboard
 │   │   │   ├── IncidentList.jsx    # Historical incident list
 │   │   │   ├── LiveDataFeed.jsx    # Real-time earthquake feed
+│   │   │   ├── OfficialReport.jsx  # Government-ready report modal and export actions
 │   │   │   ├── ReasoningChain.jsx  # Agent reasoning visualizer
 │   │   │   └── ReportForm.jsx      # Manual report submission
 │   │   ├── App.jsx                 # Main app with routing

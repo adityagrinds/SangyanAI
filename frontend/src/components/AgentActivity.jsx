@@ -24,7 +24,7 @@ function AgentActivity({ updates }) {
   return (
     <div className="card agent-activity">
       <div className="card-header">
-        <h2>🤖 Agent Activity</h2>
+        <h2>Agent Activity</h2>
         <span className="update-count">{updates.length} events</span>
       </div>
       <div className="activity-log" ref={scrollRef}>
@@ -36,7 +36,7 @@ function AgentActivity({ updates }) {
           updates.map((update, i) => (
             <div key={i} className={`activity-item ${update.status}`}>
               <div className="activity-icon">
-                {agentIcons[update.agent] || "🤖"}
+                {agentIcons[update.agent] || ""}
               </div>
               <div className="activity-content">
                 <div className="activity-header">
