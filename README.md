@@ -40,6 +40,8 @@ _Monitor, analyze, and respond — before the world even blinks._
 | ⚡ **Real-time Updates** | Socket.IO pushes agent activity, incidents, and alerts live to the UI |
 | 📡 **Manual Report Submission** | Submit free-text crisis reports for instant AI-powered analysis |
 | 📄 **Final Situation Report** | Open a compact, government-ready report modal with fetched facts, response actions, facilities, alerts, and official report references |
+| 🎙️ **Voice Reports** | Record a report from the browser microphone, transcribe it with Gnani.ai, and choose from 10 supported Indian language codes |
+| 🔊 **Voice Briefings** | Read the situation summary and assessment aloud from the Final Report using Gnani.ai text-to-speech |
 | 💾 **Report Export** | Save the final situation report as JPEG or use the print dialog to save it as PDF |
 | 👥 **Fact-Grounded Population** | Prefer reported affected counts; otherwise show a clearly labelled factor-based estimate or `Not available` instead of dummy values |
 | 🗑️ **Incident Management** | View, select, and delete incidents with real-time sync across clients |
@@ -121,6 +123,7 @@ After an incident is processed, the dashboard exposes a **Final Report** action 
 - **Node.js** v18+
 - **MongoDB** Atlas cluster (optional, free tier works)
 - **Groq API Key** — [Get one free at groq.com](https://console.groq.com)
+- **Gnani API Key** — [Get one from the Gnani API platform](https://app.gnani.ai/voice/) for speech-to-text and text-to-speech
 
 ### 1. Clone the Repository
 
@@ -140,6 +143,7 @@ Create a `.env` file:
 
 ```env
 GROQ_API_KEY=your_groq_api_key_here
+GNANI_API_KEY=your_gnani_api_key_here
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/crisis-response
 PORT=5000
 FRONTEND_URL=http://localhost:5173
@@ -174,6 +178,14 @@ npm run dev
 
 Navigate to **[http://localhost:5173](http://localhost:5173)** and you're live. 🎉
 
+### Voice input and audio briefings
+
+Allow microphone access in the browser when prompted. In the Manual Report tab, choose a language and select **Speak Report**. After recording, select **Stop & Transcribe**; the transcript is placed in the report editor for review before submission.
+
+Supported Gnani STT language codes are `hi-IN`, `en-IN`, `bn-IN`, `gu-IN`, `kn-IN`, `ml-IN`, `mr-IN`, `pa-IN`, `ta-IN`, and `te-IN`.
+
+After processing an incident, open **Final Report** and select **Read Report** to hear only the situation summary and assessment. Gnani API keys remain on the backend and must never be placed in frontend environment variables.
+
 ---
 
 ## 📁 Project Structure
@@ -190,12 +202,14 @@ Sangyan AI/
 │   ├── models/
 │   │   └── Incident.js          # Mongoose incident schema
 │   ├── routes/
-│   │   └── crisis.js            # All API endpoints
+│   │   ├── crisis.js            # Crisis and incident endpoints
+│   │   └── voice.js             # Gnani STT and TTS proxy endpoints
 │   ├── services/
 │   │   ├── autoMonitor.js       # Cron-based autonomous scanner
 │   │   ├── factEnrichment.js    # Population, facilities, and official report enrichment
 │   │   ├── liveData.js          # USGS + Open-Meteo integrations
-│   │   └── memory.js            # Historical incident memory
+│   │   ├── memory.js            # Historical incident memory
+│   │   └── voice.js             # Gnani API client
 │   ├── server.js                # Express + Socket.IO entry point
 │   └── .env.example
 ├── frontend/
@@ -235,6 +249,8 @@ Sangyan AI/
 | `GET` | `/api/crisis/incidents` | List all saved incidents |
 | `GET` | `/api/crisis/incidents/:id` | Get a single incident by ID |
 | `DELETE` | `/api/crisis/incidents/:id` | Delete an incident |
+| `POST` | `/api/voice/transcribe` | Transcribe a browser recording with Gnani STT |
+| `POST` | `/api/voice/synthesize` | Return WAV audio for text using Gnani TTS |
 
 ---
 
@@ -245,6 +261,7 @@ Sangyan AI/
 | **Frontend** | React 19, Vite 8, Three.js (React Three Fiber), GSAP, Leaflet, Socket.IO Client |
 | **Backend** | Node.js, Express 4, Socket.IO, Mongoose, node-cron |
 | **AI / LLM** | Groq SDK → GPT OSS 120B |
+| **Voice AI** | Gnani Prisma v2.5 STT and Timbre v2.5 TTS |
 | **Database** | MongoDB Atlas |
 | **Live Data** | USGS Earthquake API, Open-Meteo Weather API |
 | **Real-time** | WebSockets via Socket.IO |

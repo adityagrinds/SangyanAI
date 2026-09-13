@@ -20,6 +20,19 @@
   box-sizing: border-box;
 }
 
+.voice-actions {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+
+.voice-error {
+  color: var(--danger);
+  font-size: 12px;
+  margin: 4px 0 10px;
+}
+
 body {
   font-family: 'Playfair Display', serif;
   background: radial-gradient(circle at 20% 20%, rgba(69, 181, 255, 0.08), transparent 35%),

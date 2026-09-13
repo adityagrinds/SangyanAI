@@ -24,6 +24,7 @@ function App() {
   const [reasoningChain, setReasoningChain] = useState([]);
   const [activeTab, setActiveTab] = useState("report");
   const [showFinalReport, setShowFinalReport] = useState(false);
+  const [voiceSummary, setVoiceSummary] = useState("");
 
   useEffect(() => {
     socket.on("agentUpdate", (data) => {
@@ -72,6 +73,7 @@ function App() {
         body: JSON.stringify({ report }),
       });
       const data = await res.json();
+      setVoiceSummary(data.voiceSummary || "");
       if (data.incident) {
         setCurrentIncident({ ...data.incident, reportDetails: data.details });
       }
@@ -82,6 +84,27 @@ function App() {
       console.error("Error:", err);
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const speakResponse = async () => {
+    if (!voiceSummary) return;
+    try {
+      const res = await fetch(`${API_URL}/api/voice/synthesize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: voiceSummary, language: "hi-IN" }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Text-to-speech failed");
+      }
+      const audioUrl = URL.createObjectURL(await res.blob());
+      const audio = new Audio(audioUrl);
+      audio.onended = () => URL.revokeObjectURL(audioUrl);
+      await audio.play();
+    } catch (err) {
+      console.error("Text-to-speech failed:", err);
     }
   };
 
@@ -156,7 +179,12 @@ function App() {
         <div className="left-panel">
           {activeTab === "report" && (
             <>
-              <ReportForm onSubmit={handleSubmitReport} processing={processing} />
+              <ReportForm
+                onSubmit={handleSubmitReport}
+                processing={processing}
+                voiceSummary={voiceSummary}
+                onSpeak={speakResponse}
+              />
               <AgentActivity updates={agentUpdates} />
             </>
           )}

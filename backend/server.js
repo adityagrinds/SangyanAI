@@ -6,6 +6,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const crisisRoutes = require("./routes/crisis");
+const voiceRoutes = require("./routes/voice");
 const { setSocketIO } = require("./services/autoMonitor");
 
 const app = express();
@@ -32,6 +33,7 @@ setSocketIO(io);
 
 // Routes
 app.use("/api/crisis", crisisRoutes);
+app.use("/api/voice", voiceRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "Crisis Response API is running" });

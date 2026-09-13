@@ -1,4 +1,6 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function formatDate(value) {
   if (!value) return "Date not available";
@@ -8,6 +10,13 @@ function formatDate(value) {
 
 function OfficialReport({ incident, onClose }) {
   const reportRef = useRef(null);
+  const audioRef = useRef(null);
+  const [speaking, setSpeaking] = useState(false);
+  const [voiceError, setVoiceError] = useState("");
+
+  useEffect(() => () => {
+    audioRef.current?.pause();
+  }, []);
   if (!incident) return null;
 
   const details = incident.reportDetails || {};
@@ -18,6 +27,46 @@ function OfficialReport({ incident, onClose }) {
   const population = incident.affectedPopulation;
   const facilities = facts.nearbyFacilities || [];
   const reports = facts.officialReports || [];
+
+  const reportSpeech = [
+    `Situation summary: ${incident.description || monitor.description || "Summary not available"}.`,
+    `Assessment: ${analysis.analysisNotes || "Assessment not available"}.`,
+  ].filter(Boolean).join(" ");
+
+  const toggleSpeech = async () => {
+    setVoiceError("");
+    if (speaking) {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      setSpeaking(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/voice/synthesize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: reportSpeech, language: "en-IN" }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Could not read the report aloud");
+      }
+      const audioUrl = URL.createObjectURL(await res.blob());
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+        setSpeaking(false);
+      };
+      await audio.play();
+      setSpeaking(true);
+    } catch (error) {
+      setVoiceError(error.message);
+      setSpeaking(false);
+    }
+  };
 
   const downloadJpeg = () => {
     const element = reportRef.current;
@@ -51,10 +100,12 @@ function OfficialReport({ incident, onClose }) {
         <h2>Official Situation Report</h2>
         <div>
           <button className="report-close-button" onClick={onClose}>Close</button>
+          <button className="btn-secondary" onClick={toggleSpeech}>{speaking ? "⏹ Stop Reading" : "🔊 Read Report"}</button>
           <button className="btn-secondary" onClick={() => window.print()}>Save as PDF</button>
           <button className="btn-secondary" onClick={downloadJpeg}>Save as JPEG</button>
         </div>
       </div>
+      {voiceError && <p className="voice-error">{voiceError}</p>}
       <article className="official-report" ref={reportRef}>
         <header className="official-report-header">
           <div>

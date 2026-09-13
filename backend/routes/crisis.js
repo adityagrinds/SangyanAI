@@ -190,6 +190,12 @@ router.post("/process", async (req, res) => {
         memory,
         reasoningChain,
       },
+      voiceSummary: [
+        `Crisis detected: ${monitorResult.title || "Unknown event"}.`,
+        `Severity is ${analyzerResult.severity}.`,
+        `Priority is ${analyzerResult.priorityLevel} out of 10.`,
+        responderResult.alerts?.[0]?.message || "",
+      ].filter(Boolean).join(" "),
     });
   } catch (error) {
     console.error("Processing error:", error);
