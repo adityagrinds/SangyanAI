@@ -27,6 +27,33 @@
   flex-wrap: wrap;
 }
 
+.voice-actions select {
+  min-width: 168px;
+  padding: 6px 30px 6px 12px;
+  background: rgba(10, 18, 36, 0.92);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: 'Playfair Display', serif;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.voice-actions select:hover,
+.voice-actions select:focus {
+  color: var(--text-primary);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(69, 181, 255, 0.14);
+}
+
+.voice-actions select option {
+  background: #0a1224;
+  color: var(--text-primary);
+  font-family: 'Playfair Display', serif;
+}
+
 .voice-error {
   color: var(--danger);
   font-size: 12px;
