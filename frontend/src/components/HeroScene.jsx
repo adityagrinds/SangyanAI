@@ -4,7 +4,6 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { useRef, useMemo } from "react";
 import * as THREE from "three";
 
-/* ── Wireframe Globe with Pulsing Crisis Hotspots ── */
 function PulsingHotspots({ positions }) {
   const ref = useRef();
   const baseSize = 0.065;
@@ -12,7 +11,6 @@ function PulsingHotspots({ positions }) {
   useFrame((state) => {
     if (!ref.current) return;
     const t = state.clock.elapsedTime;
-    // Pulsing size and opacity
     const pulse = 0.5 + 0.5 * Math.sin(t * 2.5);
     ref.current.material.size = baseSize + pulse * 0.04;
     ref.current.material.opacity = 0.5 + pulse * 0.45;
@@ -39,7 +37,6 @@ function PulsingHotspots({ positions }) {
   );
 }
 
-/* ── Expanding ring pulse per hotspot ── */
 function HotspotRings({ positions }) {
   const rings = useMemo(() => {
     const arr = [];
@@ -121,7 +118,6 @@ function Globe() {
 
   return (
     <group ref={groupRef} position={[3.2, 0.2, -1.5]}>
-      {/* Wireframe shell */}
       <mesh>
         <icosahedronGeometry args={[2, 8]} />
         <meshBasicMaterial
@@ -132,7 +128,6 @@ function Globe() {
         />
       </mesh>
 
-      {/* Solid core */}
       <mesh>
         <sphereGeometry args={[1.92, 32, 32]} />
         <meshStandardMaterial
@@ -143,7 +138,6 @@ function Globe() {
         />
       </mesh>
 
-      {/* Surface grid dots */}
       <points>
         <bufferGeometry>
           <bufferAttribute
@@ -162,23 +156,19 @@ function Globe() {
         />
       </points>
 
-      {/* Pulsing crisis hotspot markers */}
       <PulsingHotspots positions={hotspots} />
       <HotspotRings positions={hotspots} />
 
-      {/* Orbital ring 1 */}
       <mesh rotation={[Math.PI / 2.3, 0, 0]}>
         <torusGeometry args={[2.45, 0.008, 8, 120]} />
         <meshBasicMaterial color="#45b5ff" transparent opacity={0.35} />
       </mesh>
 
-      {/* Orbital ring 2 */}
       <mesh rotation={[Math.PI / 1.7, Math.PI / 5, 0]}>
         <torusGeometry args={[2.65, 0.006, 8, 120]} />
         <meshBasicMaterial color="#7c7bff" transparent opacity={0.22} />
       </mesh>
 
-      {/* Atmosphere halo */}
       <mesh>
         <sphereGeometry args={[2.25, 32, 32]} />
         <meshBasicMaterial
@@ -192,7 +182,6 @@ function Globe() {
   );
 }
 
-/* ── Ambient floating energy orbs ── */
 function FloatingOrbs() {
   const orbs = useMemo(() => {
     const palette = ["#45b5ff", "#7c7bff", "#0fccae", "#ff5f6d", "#f59e0b"];
@@ -218,7 +207,6 @@ function FloatingOrbs() {
   ));
 }
 
-/* ── Pulsing radar ring around globe ── */
 function RadarPulse() {
   const ref = useRef();
 
@@ -243,7 +231,6 @@ function RadarPulse() {
   );
 }
 
-/* ── Main Scene ── */
 export default function HeroScene() {
   return (
     <div

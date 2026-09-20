@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import HeroScene from "./HeroScene";
 
-/* ── Animated counter hook ── */
 function useCountUp(end, duration = 1.8, startTrigger = false) {
   const [value, setValue] = useState(0);
   const frameRef = useRef();
@@ -38,14 +37,11 @@ export default function LandingPage({ onEnter }) {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-      /* ── Logo + tagline ── */
       tl.from(".lp-logo", { opacity: 0, y: -30, duration: 0.9, delay: 0.3 });
       tl.from(".lp-tagline", { opacity: 0, y: 15, duration: 0.6 }, "-=0.35");
 
-      /* ── Eyebrow ── */
       tl.from(".lp-eyebrow", { opacity: 0, x: -30, duration: 0.5 }, "-=0.2");
 
-      /* ── Title words stagger ── */
       tl.from(".lp-word", {
         opacity: 0,
         y: 70,
@@ -55,10 +51,8 @@ export default function LandingPage({ onEnter }) {
         ease: "back.out(1.4)",
       }, "-=0.25");
 
-      /* ── Subtitle ── */
       tl.from(".lp-subtitle", { opacity: 0, y: 20, duration: 0.6 }, "-=0.15");
 
-      /* ── CTA buttons ── */
       tl.from(".lp-cta", {
         opacity: 0,
         y: 25,
@@ -67,7 +61,6 @@ export default function LandingPage({ onEnter }) {
         stagger: 0.12,
       }, "-=0.15");
 
-      /* ── Side dots ── */
       tl.from(".lp-dot", {
         opacity: 0,
         x: 20,
@@ -75,7 +68,6 @@ export default function LandingPage({ onEnter }) {
         stagger: 0.08,
       }, "-=0.3");
 
-      /* ── Bottom stats ── */
       tl.from(".lp-stat", {
         opacity: 0,
         y: 20,
@@ -86,7 +78,6 @@ export default function LandingPage({ onEnter }) {
 
 
 
-      /* ── Scan line sweep ── */
       gsap.fromTo(
         ".lp-scanline",
         { top: "-2px", opacity: 0.35 },
@@ -99,15 +90,12 @@ export default function LandingPage({ onEnter }) {
 
   return (
     <div className="landing" ref={containerRef}>
-      {/* ── 3D background ── */}
       <HeroScene />
 
-      {/* ── Overlay effects ── */}
       <div className="lp-scanline" />
       <div className="lp-grid" />
       <div className="lp-vignette" />
 
-      {/* ── Header ── */}
       <header className="landing-header">
         <div className="lp-logo">
           <svg className="lp-shield" width="34" height="34" viewBox="0 0 32 32" fill="none">
@@ -137,7 +125,6 @@ export default function LandingPage({ onEnter }) {
         </div>
       </header>
 
-      {/* ── Main content ── */}
       <main className="landing-content">
         <p className="lp-eyebrow">
           <span className="eyebrow-bar" />
@@ -175,14 +162,12 @@ export default function LandingPage({ onEnter }) {
         </div>
       </main>
 
-      {/* ── Side dots ── */}
       <div className="landing-social">
         <span className="lp-dot" />
         <span className="lp-dot active" />
         <span className="lp-dot" />
       </div>
 
-      {/* ── Bottom stats (animated counters) ── */}
       <div className="lp-stats">
         <div className="lp-stat">
           <span className="stat-val">{countMonitor}/7</span>

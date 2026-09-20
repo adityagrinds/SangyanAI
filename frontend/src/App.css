@@ -86,9 +86,6 @@ div {
   font-family: inherit;
 }
 
-/* ═══════════════════════════════════════════════════
-   LANDING PAGE — 3D animated hero
-   ═══════════════════════════════════════════════════ */
 
 .landing {
   position: relative;
@@ -102,7 +99,6 @@ div {
   background: #050a17;
 }
 
-/* ── Overlay effects ── */
 .lp-scanline {
   position: absolute;
   left: 0;
@@ -134,7 +130,6 @@ div {
   pointer-events: none;
 }
 
-/* ── Header / Logo ── */
 .landing-header {
   position: absolute;
   top: 28px;
@@ -175,7 +170,6 @@ div {
   text-transform: uppercase;
 }
 
-/* ── Main content ── */
 .landing-content {
   max-width: 560px;
   position: relative;
@@ -239,7 +233,6 @@ div {
   letter-spacing: 0.01em;
 }
 
-/* ── CTA Buttons ── */
 .landing-actions {
   display: flex;
   align-items: center;
@@ -319,7 +312,6 @@ div {
   box-shadow: 0 0 16px rgba(69,181,255,0.12);
 }
 
-/* keep old ghost-btn for dashboard */
 .ghost-btn {
   padding: 10px 18px;
   background: rgba(255, 255, 255, 0.02);
@@ -363,7 +355,6 @@ div {
   justify-content: flex-end;
 }
 
-/* ── Side dots ── */
 .landing-social {
   position: absolute;
   right: 32px;
@@ -390,7 +381,6 @@ div {
   box-shadow: 0 0 10px rgba(69,181,255,0.5);
 }
 
-/* ── Bottom stats ── */
 .lp-stats {
   position: absolute;
   bottom: 32px;
@@ -448,7 +438,6 @@ body::before {
   position: relative;
 }
 
-/* Header */
 .app-header {
   position: sticky;
   top: 0;
@@ -666,7 +655,6 @@ body::before {
   50% { transform: scale(1.5); opacity: 0.5; }
 }
 
-/* Tab Bar */
 .tab-bar-row {
   display: flex;
   align-items: center;
@@ -746,7 +734,6 @@ body::before {
   box-shadow: 0 0 12px rgba(69, 181, 255, 0.55);
 }
 
-/* Main Layout */
 .app-main {
   display: grid;
   grid-template-columns: 420px 1fr;
@@ -783,7 +770,6 @@ body::before {
   gap: 20px;
 }
 
-/* Cards */
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -841,7 +827,6 @@ body::before {
   font-weight: 600;
 }
 
-/* Report Form */
 .report-form form {
   padding: 16px;
 }
@@ -925,7 +910,6 @@ body::before {
   to { transform: rotate(360deg); }
 }
 
-/* Agent Activity */
 .agent-activity .activity-log {
   max-height: 350px;
   overflow-y: auto;
@@ -994,12 +978,10 @@ body::before {
   opacity: 0.6;
 }
 
-/* Map */
 .map-container .leaflet-container {
   background: var(--bg-primary);
 }
 
-/* Dashboard */
 .dashboard .dashboard-content {
   padding: 16px;
 }
@@ -1074,7 +1056,6 @@ body::before {
   line-height: 1.4;
 }
 
-/* Incident List */
 .incident-list {
   margin-top: 20px;
 }
@@ -1150,7 +1131,6 @@ body::before {
 .severity-dot.high { background: #f97316; }
 .severity-dot.critical { background: #ef4444; }
 
-/* Live Data Feed */
 .live-feed-content {
   padding: 8px;
 }
@@ -1233,7 +1213,6 @@ body::before {
   margin-left: 6px;
 }
 
-/* Auto Monitor */
 .btn-monitor {
   padding: 6px 16px;
   border: 1px solid var(--border);
@@ -1319,7 +1298,6 @@ body::before {
   margin-left: 8px;
 }
 
-/* Reasoning Chain */
 .chain-content {
   padding: 16px;
   max-height: 350px;
@@ -1392,7 +1370,6 @@ body::before {
   margin-top: 4px;
 }
 
-/* Empty State */
 .empty-state {
   padding: 30px;
   text-align: center;
@@ -1400,7 +1377,6 @@ body::before {
   font-size: 14px;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -1414,7 +1390,6 @@ body::before {
   border-radius: 3px;
 }
 
-/* Responsive */
 @media (max-width: 1024px) {
   .app-main {
     grid-template-columns: 1fr;

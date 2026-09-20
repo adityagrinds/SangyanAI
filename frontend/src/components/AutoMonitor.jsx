@@ -7,13 +7,11 @@ function AutoMonitor({ socket }) {
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
-    // Check current status
     fetch(`${API_URL}/api/crisis/auto-monitor/status`)
       .then((res) => res.json())
       .then((data) => setIsRunning(data.isRunning))
       .catch(() => {});
 
-    // Listen for auto-monitor events
     socket.on("autoMonitor", (data) => {
       setLogs((prev) => [...prev.slice(-20), { ...data, timestamp: new Date() }]);
     });
