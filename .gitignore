@@ -1,5 +1,8 @@
+# Dependencies and generated build output
 node_modules/
 .env
 dist/
+
+# Local system and runtime files
 .DS_Store
 *.log
