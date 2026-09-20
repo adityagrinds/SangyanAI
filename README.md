@@ -22,6 +22,8 @@ _Monitor, analyze, and respond — before the world even blinks._
 
 > **Built for hackathons. Designed for real impact.**
 
+Project documentation is maintained alongside the application.
+
 ---
 
 ## ✨ Key Features
