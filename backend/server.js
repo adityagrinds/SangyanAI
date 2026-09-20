@@ -12,7 +12,6 @@ const { setSocketIO } = require("./services/autoMonitor");
 const app = express();
 const server = http.createServer(app);
 
-// CORS origins - add your Vercel URL after deployment
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
@@ -23,15 +22,12 @@ const io = new Server(server, {
   cors: { origin: allowedOrigins, methods: ["GET", "POST"] },
 });
 
-// Middleware
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
-// Make io accessible in routes and auto-monitor
 app.set("io", io);
 setSocketIO(io);
 
-// Routes
 app.use("/api/crisis", crisisRoutes);
 app.use("/api/voice", voiceRoutes);
 
@@ -39,7 +35,6 @@ app.get("/", (req, res) => {
   res.json({ message: "Crisis Response API is running" });
 });
 
-// Socket.io connection
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
   socket.on("disconnect", () => {
@@ -47,7 +42,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// Connect to MongoDB (optional) and start server
 const PORT = process.env.PORT || 5000;
 
 function startServer(dbStatus) {

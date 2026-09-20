@@ -1,6 +1,5 @@
 const axios = require("axios");
 
-// USGS Earthquake API - completely free, no key needed
 async function getRecentEarthquakes(minMagnitude = 4) {
   const url = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minmagnitude=${minMagnitude}&limit=10&orderby=time`;
   const { data } = await axios.get(url);
@@ -19,7 +18,6 @@ async function getRecentEarthquakes(minMagnitude = 4) {
   }));
 }
 
-// Open-Meteo Weather API - completely free, no key needed
 async function getWeatherAlerts(lat, lng) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&timezone=auto&forecast_days=3`;
   const { data } = await axios.get(url);
@@ -55,11 +53,9 @@ function getWeatherDescription(code) {
   return descriptions[code] || "Unknown";
 }
 
-// Fetch global disaster data combining earthquake + weather for major cities
 async function getGlobalCrisisData() {
   const earthquakes = await getRecentEarthquakes(4);
 
-  // Get weather for affected earthquake areas
   const enrichedQuakes = [];
   for (const eq of earthquakes.slice(0, 5)) {
     try {

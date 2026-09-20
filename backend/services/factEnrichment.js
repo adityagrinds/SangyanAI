@@ -1,17 +1,7 @@
-/**
- * factEnrichment.js
- * Fetches REAL, VERIFIED data from open APIs:
- * 1. Open-Meteo Geocoding API  → real city census population
- * 2. OpenStreetMap Overpass API → real nearby hospitals, shelters, fire stations, police
- * 3. UNOCHA ReliefWeb API       → official verified disaster reports / figures
- *
- * NO fake numbers, NO hallucinated names. If data is unavailable, returns null.
- */
 
 const https = require("https");
 const http = require("http");
 
-// ─── Utility: fetch JSON from a URL ───────────────────────────────────────────
 function fetchJSON(url, timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
     const client = url.startsWith("https") ? https : http;
@@ -34,11 +24,8 @@ function fetchJSON(url, timeoutMs = 8000) {
   });
 }
 
-// ─── 1. REAL POPULATION via Open-Meteo Geocoding API ─────────────────────────
-// Open-Meteo geocoding returns official city population from multiple databases.
 async function getAreaPopulationInfo(lat, lng, locationName) {
   try {
-    // Use Open-Meteo geocoding search by name to get official census population
     const query = encodeURIComponent(locationName || "");
     const url = `https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=1&language=en&format=json`;
     const data = await fetchJSON(url);
@@ -64,8 +51,6 @@ async function getAreaPopulationInfo(lat, lng, locationName) {
   }
 }
 
-// Extract an affected-person figure only when an official report states one
-// explicitly. A city census total is not treated as a disaster impact count.
 function extractAffectedPopulation(text) {
   if (!text) return null;
 
@@ -108,11 +93,9 @@ function calculateAffectedPopulationEstimate(totalPopulation, crisisType, eventD
   return null;
 }
 
-// ─── 2. REAL FACILITIES via OpenStreetMap Overpass API ───────────────────────
 async function getNearbyFacilities(lat, lng, radiusKm = 30) {
   try {
     const radiusM = radiusKm * 1000;
-    // Query for hospitals, clinics, shelters, fire stations, police, military
     const overpassQuery = `
 [out:json][timeout:15];
 (
@@ -140,7 +123,6 @@ out center tags 20;
         const facilityLat = el.lat || el.center?.lat;
         const facilityLng = el.lon || el.center?.lon;
 
-        // Calculate distance in km from the incident
         let distanceKm = null;
         if (facilityLat && facilityLng) {
           const R = 6371;
@@ -173,7 +155,6 @@ out center tags 20;
   }
 }
 
-// ─── 3. REAL DISASTER REPORTS via UNOCHA ReliefWeb API ───────────────────────
 async function getReliefWebData(query, locationName) {
   try {
     const searchTerm = encodeURIComponent(`${query} ${locationName || ""}`);
@@ -187,7 +168,6 @@ async function getReliefWebData(query, locationName) {
       date: item.fields?.date?.created,
       source: item.fields?.source?.[0]?.name,
       url: item.href,
-      // Keep enough report text to detect explicit affected-person figures.
       excerpt: item.fields?.["body-html"]
         ? item.fields["body-html"].replace(/<[^>]*>/g, "").substring(0, 2000).trim()
         : null,
@@ -213,20 +193,11 @@ async function getReliefWebData(query, locationName) {
   }
 }
 
-// ─── Master enrichment function ───────────────────────────────────────────────
-/**
- * enrichCrisisContext — main function called before analyzerAgent
- * @param {object} location — { name, lat, lng }
- * @param {string} query    — crisis type or keyword (e.g. "earthquake")
- * @param {string} crisisType — "earthquake" | "flood" | "fire" etc.
- * @returns {object} enrichedFacts with real population, facilities, reports
- */
 async function enrichCrisisContext(location, query, crisisType, eventData = {}) {
   const { name, lat, lng } = location || {};
 
   console.log(`[FactEnrichment] Fetching real data for: ${name} (${lat}, ${lng}), type: ${crisisType}`);
 
-  // Run all API calls in parallel for speed
   const [populationInfo, facilities, reliefWebData] = await Promise.allSettled([
     lat && lng ? getAreaPopulationInfo(lat, lng, name) : Promise.resolve(null),
     lat && lng ? getNearbyFacilities(lat, lng, 40) : Promise.resolve([]),

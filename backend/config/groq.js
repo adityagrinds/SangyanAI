@@ -197,7 +197,6 @@ function fallbackResponder(crisisData, analysisData) {
 async function callAgent(systemPrompt, userMessage) {
   const inputText = textFromInput(userMessage);
 
-  // If no API key configured, skip directly to fallback
   if (!groq) {
     const prompt = systemPrompt.toLowerCase();
     if (prompt.includes("monitor agent")) return fallbackMonitor(inputText);
@@ -231,7 +230,6 @@ async function callAgent(systemPrompt, userMessage) {
   } catch (error) {
     console.error(`[Groq API Error] ${error.message || error}`);
 
-    // Graceful fallback — use local logic instead of crashing
     const prompt = systemPrompt.toLowerCase();
     if (prompt.includes("monitor agent")) {
       console.log("[Fallback] Using local monitor agent");

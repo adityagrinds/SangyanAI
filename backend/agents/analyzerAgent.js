@@ -1,10 +1,5 @@
 const { callAgent } = require("../config/groq");
 
-/**
- * analyzerAgent — receives crisis data + REAL enriched facts.
- * The LLM is instructed via strict prompt to use only the verified figures provided.
- * A programmatic guardrail then enforces the correct population number even if the LLM deviates.
- */
 
 function buildAnalyzerPrompt(enrichedFacts) {
   const affectedPopulation = enrichedFacts?.affectedPopulation;
@@ -66,14 +61,12 @@ async function analyzerAgent(crisisData, enrichedFacts) {
 
   const result = await callAgent(prompt, input);
 
-  // ─── Programmatic guardrail: enforce real population number ───────────────
   const verifiedPop = enrichedFacts?.affectedPopulation;
   if (verifiedPop != null) {
     result.estimatedAffectedPopulation = verifiedPop.value;
     result.populationStatus = verifiedPop.status;
     result.populationDataSource = verifiedPop.source;
   } else {
-    // No event-specific official data available — never fall back to a guess.
     result.estimatedAffectedPopulation = null;
     result.populationStatus = "not_available";
     result.populationDataSource = "Not available — no event-specific official figure found";

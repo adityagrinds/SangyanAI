@@ -11,7 +11,6 @@ const { startAutoMonitor, stopAutoMonitor, getAutoMonitorStatus } = require("../
 const { resolveIncidentLocation } = require("../services/locationResolver");
 const { enrichCrisisContext } = require("../services/factEnrichment");
 
-// Process a new crisis report through all 3 agents with memory + reasoning chain
 router.post("/process", async (req, res) => {
   const { report } = req.body;
   const io = req.app.get("io");
@@ -23,7 +22,6 @@ router.post("/process", async (req, res) => {
   const reasoningChain = [];
 
   try {
-    // Step 1: Monitor Agent detects the crisis
     io.emit("agentUpdate", { agent: "Monitor Agent", status: "working", message: "Scanning report for crisis indicators..." });
     reasoningChain.push({ agent: "Monitor Agent", action: "Received raw report input", timestamp: new Date() });
 
@@ -54,7 +52,6 @@ router.post("/process", async (req, res) => {
       return res.json({ message: "No crisis detected in the report.", monitorResult, reasoningChain });
     }
 
-    // Fetch agent memory for context
     const memory = await getRelevantMemory(monitorResult.type, monitorResult.location?.name);
     const memoryContext = buildMemoryContext(memory);
 
@@ -63,7 +60,6 @@ router.post("/process", async (req, res) => {
       io.emit("reasoningUpdate", { chain: reasoningChain });
     }
 
-    // Step 2: Fact Enrichment — fetch REAL population & facilities before analysis
     io.emit("agentUpdate", { agent: "Fact Enrichment", status: "working", message: `Fetching real census data & nearby facilities for ${monitorResult.location?.name || "location"}...` });
     reasoningChain.push({ agent: "Fact Enrichment", action: `Collecting population, facility and official disaster data for: ${monitorResult.location?.name || "unknown location"}`, timestamp: new Date() });
 
@@ -92,7 +88,6 @@ router.post("/process", async (req, res) => {
       io.emit("agentUpdate", { agent: "Fact Enrichment", status: "done", message: "⚠️ Real data fetch failed — agents will avoid hallucinating" });
     }
 
-    // Step 3: Analyzer Agent assesses severity (with memory + real facts)
     reasoningChain.push({ agent: "Monitor Agent → Analyzer Agent", action: `Passing crisis data + verified facts: type=${monitorResult.type}, location=${monitorResult.location?.name}`, timestamp: new Date() });
     io.emit("agentUpdate", { agent: "Analyzer Agent", status: "working", message: `Analyzing severity with real data...${memory ? ` (referencing ${memory.count} past incidents)` : ""}` });
 
@@ -103,7 +98,6 @@ router.post("/process", async (req, res) => {
     io.emit("agentUpdate", { agent: "Analyzer Agent", status: "done", message: `Analysis complete: Severity ${analyzerResult.severity}, Priority ${analyzerResult.priorityLevel}/10`, data: analyzerResult });
     io.emit("reasoningUpdate", { chain: reasoningChain });
 
-    // Step 4: Responder Agent creates response plan (with memory + real facilities)
     reasoningChain.push({ agent: "Analyzer Agent → Responder Agent", action: `Passing analysis + ${enrichedFacts?.nearbyFacilities?.length || 0} real OSM facilities: severity=${analyzerResult.severity}`, timestamp: new Date() });
     io.emit("agentUpdate", { agent: "Responder Agent", status: "working", message: `Generating response plan using ${enrichedFacts?.nearbyFacilities?.length || 0} real nearby facilities...` });
 
@@ -113,7 +107,6 @@ router.post("/process", async (req, res) => {
     io.emit("agentUpdate", { agent: "Responder Agent", status: "done", message: `Response plan ready: ${responderResult.actions?.length || 0} actions, ${responderResult.resources?.length || 0} verified facilities`, data: responderResult });
     io.emit("reasoningUpdate", { chain: reasoningChain });
 
-    // Save to database (skip if MongoDB not connected)
     let incident = null;
     try {
       incident = new Incident({
@@ -203,7 +196,6 @@ router.post("/process", async (req, res) => {
   }
 });
 
-// Get live crisis data from real APIs
 router.get("/live-data", async (req, res) => {
   try {
     const data = await getGlobalCrisisData();
@@ -213,7 +205,6 @@ router.get("/live-data", async (req, res) => {
   }
 });
 
-// Get recent earthquakes
 router.get("/earthquakes", async (req, res) => {
   try {
     const quakes = await getRecentEarthquakes(parseFloat(req.query.min_mag) || 4);
@@ -223,7 +214,6 @@ router.get("/earthquakes", async (req, res) => {
   }
 });
 
-// Auto-monitor controls
 router.post("/auto-monitor/start", (req, res) => {
   const result = startAutoMonitor();
   res.json(result);
@@ -238,7 +228,6 @@ router.get("/auto-monitor/status", (req, res) => {
   res.json(getAutoMonitorStatus());
 });
 
-// Get all incidents
 router.get("/incidents", async (req, res) => {
   try {
     if (mongoose.connection.readyState !== 1) return res.json([]);
@@ -249,7 +238,6 @@ router.get("/incidents", async (req, res) => {
   }
 });
 
-// Get single incident
 router.get("/incidents/:id", async (req, res) => {
   try {
     if (mongoose.connection.readyState !== 1) return res.status(503).json({ error: "Database not connected" });
@@ -261,7 +249,6 @@ router.get("/incidents/:id", async (req, res) => {
   }
 });
 
-// Delete incident
 router.delete("/incidents/:id", async (req, res) => {
   try {
     const incident = await Incident.findByIdAndDelete(req.params.id);

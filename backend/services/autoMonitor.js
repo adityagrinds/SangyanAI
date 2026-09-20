@@ -19,7 +19,6 @@ function setSocketIO(socketIO) {
 async function processEarthquakeAutonomously(earthquake) {
   if (!io) return;
 
-  // Check if we already processed this earthquake (only if DB connected)
   if (mongoose.connection.readyState === 1) {
     const existing = await Incident.findOne({ title: earthquake.title });
     if (existing) return null;
@@ -29,16 +28,13 @@ async function processEarthquakeAutonomously(earthquake) {
 
   io.emit("autoMonitor", { type: "detection", message: `🔴 Live earthquake detected: ${earthquake.title}`, data: earthquake });
 
-  // Run through agent pipeline
   io.emit("agentUpdate", { agent: "Monitor Agent", status: "working", message: `[AUTO] Analyzing live earthquake: ${earthquake.title}` });
   const monitorResult = await monitorAgent(report);
   io.emit("agentUpdate", { agent: "Monitor Agent", status: "done", message: `[AUTO] ${monitorResult.title}`, data: monitorResult });
 
-  // Get memory for better context
   const memory = await getRelevantMemory("earthquake");
   const memoryContext = buildMemoryContext(memory);
 
-  // Fact Enrichment — fetch REAL population & facilities for this earthquake location
   io.emit("agentUpdate", { agent: "Fact Enrichment", status: "working", message: `[AUTO] Fetching real data for ${earthquake.place}...` });
   let enrichedFacts = null;
   try {
@@ -63,7 +59,6 @@ async function processEarthquakeAutonomously(earthquake) {
   const responderResult = await responderAgent(monitorResult, { ...analyzerResult, memoryContext }, enrichedFacts);
   io.emit("agentUpdate", { agent: "Responder Agent", status: "done", message: `[AUTO] Response plan ready: ${responderResult.actions?.length || 0} actions, ${responderResult.resources?.length || 0} verified facilities`, data: responderResult });
 
-  // Save incident (only if DB connected)
   let incident = null;
   try {
     incident = new Incident({
@@ -124,7 +119,6 @@ function startAutoMonitor() {
 
   isAutoMonitoring = true;
 
-  // Check every 2 minutes for new earthquakes
   cronJob = cron.schedule("*/2 * * * *", async () => {
     if (!io) return;
     io.emit("autoMonitor", { type: "scan", message: "🔍 Scanning for new crisis events..." });

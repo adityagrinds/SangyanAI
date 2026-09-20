@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const Incident = require("../models/Incident");
 
-// Get past incidents similar to the current crisis for agent context
 async function getRelevantMemory(type, location) {
   if (mongoose.connection.readyState !== 1) return null;
 
@@ -31,7 +30,6 @@ async function getRelevantMemory(type, location) {
   };
 }
 
-// Build memory context string for agent prompts
 function buildMemoryContext(memory) {
   if (!memory || memory.count === 0) return "";
 

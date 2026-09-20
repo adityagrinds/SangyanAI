@@ -1,10 +1,5 @@
 const { callAgent } = require("../config/groq");
 
-/**
- * responderAgent — receives crisis data, analysis, and REAL nearby facilities from OSM.
- * The LLM is instructed to ONLY reference facilities whose names are provided in the context.
- * No fabricated names are allowed.
- */
 
 function buildResponderPrompt(enrichedFacts) {
   const facilities = enrichedFacts?.nearbyFacilities || [];
@@ -70,16 +65,12 @@ async function responderAgent(crisisData, analysisData, enrichedFacts) {
   const input = JSON.stringify({ crisis: crisisData, analysis: analysisData });
   const result = await callAgent(prompt, input);
 
-  // ─── Programmatic guardrail: replace any AI-invented resource names ────────
-  // If we have real OSM facilities, ensure resources match only known names
   const knownNames = new Set((enrichedFacts?.nearbyFacilities || []).map((f) => f.name?.toLowerCase()));
 
   if (enrichedFacts?.nearbyFacilities?.length > 0 && result.resources?.length > 0) {
     result.resources = result.resources.map((r) => {
       const nameLower = r.name?.toLowerCase() || "";
-      // If the name doesn't match any known OSM facility, replace with closest match
       if (!knownNames.has(nameLower) && r.name && !r.name.toLowerCase().includes("local") && !r.name.toLowerCase().includes("nearest")) {
-        // Find matching type from real OSM data
         const matchingFacility = enrichedFacts.nearbyFacilities.find(
           (f) => f.type === r.type || (r.type === "hospital" && (f.type === "hospital" || f.type === "clinic"))
         );
