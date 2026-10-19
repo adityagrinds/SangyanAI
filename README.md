@@ -24,6 +24,36 @@ _Monitor, analyze, and respond — before the world even blinks._
 
 Project documentation is maintained alongside the application.
 
+## 🚀 Deployment
+
+The application is deployed as two services:
+
+1. **Frontend:** Vercel, using `frontend` as the root directory.
+2. **Backend:** Render, using `backend` as the root directory. A ready-to-use `render.yaml` is included at the repository root.
+
+### Backend environment variables
+
+Set these in the Render service dashboard. Never commit real values to Git:
+
+```text
+GROQ_API_KEY=...
+MONGODB_URI=...
+GNANI_API_KEY=...
+FRONTEND_URL=https://<your-vercel-project>.vercel.app
+```
+
+Render provides the `PORT` variable automatically. The backend binds to it.
+
+### Frontend environment variable
+
+In the Vercel project settings, set the following variable before deploying:
+
+```text
+VITE_API_URL=https://<your-render-service>.onrender.com
+```
+
+After the first Vercel deployment, copy its public URL into Render's `FRONTEND_URL`, then redeploy the backend. After the backend is live, verify `https://<your-render-service>.onrender.com/` returns the API health response.
+
 ---
 
 ## ✨ Key Features

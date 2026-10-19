@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: sangyan-ai-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: GNANI_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
